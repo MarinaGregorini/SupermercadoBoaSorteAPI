@@ -187,6 +187,16 @@ GET http://68.221.171.29:5000/api/consumidores/<id:consumidor>/resumo
 
 ---
 
+## 💰 Custos Estimados
+
+| Categoria | Serviço | Região | Descrição | Custo Estimado Mensal |
+|-----------|---------|--------|------------|----------------------|
+| Computação | Virtual Machines | Spain Central | 1 B1ms (1 Core, 2 GB RAM) x 730 Horas (Pay as you go), Linux; 1 managed disk – S4; Inter Region transfer type, 5 GB outbound data transfer de Espanha Central para Ásia Leste | €16,90 |
+| Computação | App Service | Spain Central | Escalão Gratuito; 1 (0 núcleo(s), 0 GB de RAM, armazenamento 0 de GB) x 730 Horas; SO Linux | €0,00 |
+| Armazenamento | Storage Accounts | Spain Central | Armazenamento de Blobs de Blocos, Fins Gerais V2, Espaço de Nomes Não Hierárquico, LRS Redundância, Escalão de acesso Frequente, 6 GB Capacidade - \"Pay-As-You-Go\", 100 x 10 000 operações de Escrita, 5 x 10 000 Operações de Listagem e de Criação de Contentores, 300 x 10 000 operações de Leitura, 100 x 10 000 Outras operações. 1000 GB Obtenção de Dados, 1000 GB Escrita de Dados, SFTP desativado | €6,74 |
+| Suporte | Support | - | - | €0,00 |
+| **Total** | - | - | - | **€23,64** |
+
 ## 👥 Equipa
 - **Bruna Dutra**
 - **Marina Gregorini**
