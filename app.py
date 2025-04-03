@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify
 from models import db, Transportadora, Produtor, Produto, Consumidor, consumidor_produto
 
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:////home/grupo4/grupo4/SupermercadoBoaSorte/db/db_supermercado.db"
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:////home/grupo4/grupo4/SupermercadoBoaSorteAPI/db/db_supermercado.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db.init_app(app)
