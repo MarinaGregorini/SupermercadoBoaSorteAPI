@@ -81,7 +81,7 @@ sudo nano /etc/fstab
 ```
 Adicione a seguinte linha ao final:
 ```
-tiagosilva1.file.core.windows.net/db-supermercado/db /home/grupo4/grupo4/SupermercadoBoaSorteAPI/db cifs credentials=/etc/azurefiles.cred,vers=3.0,serverino,dir_mode=0777,file_mode=0777,nobr 0 0
+//tiagosilva1.file.core.windows.net/db-supermercado /home/grupo4/grupo4/SupermercadoBoaSorteAPI/db cifs credentials=/etc/azurefiles.cred,vers=3.0,serverino,dir_mode=0777,file_mode=0777,nobrl 0 0
 ```
 
 ### 🔄 Aplicar as configurações e testar a montagem
