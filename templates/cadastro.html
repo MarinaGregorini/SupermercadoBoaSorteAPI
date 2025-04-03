@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}Cadastro | Supermercado Boa Sorte{% endblock %}
+
+{% block content %}
+<div class="container d-flex flex-column justify-content-center align-items-center">
+    <img src="https://cdn-icons-png.flaticon.com/512/6680/6680353.png" alt="Logo" class="logo mb-3">
+    <h1 class="text-center mb-3">Bem-vindo ao<br>Supermercado Boa Sorte!</h1>
+    <form method="POST" class="w-100 mt-3" style="max-width: 300px;">
+        <div class="mb-3">
+            <label for="nome" class="form-label">Seu nome</label>
+            <input type="text" class="form-control" id="nome" name="nome" required>
+        </div>
+        <button type="submit" class="btn btn-custom w-100">Entrar</button>
+    </form>
+    <br><br><br>
+    {% endblock %}

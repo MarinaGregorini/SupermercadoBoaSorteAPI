@@ -1,0 +1,127 @@
+body {
+  font-family: 'Poppins', sans-serif;
+  background-color: #f0f8ff;
+}
+
+.container {
+  max-width: 800px;
+  margin-top: 20px;
+  padding: 20px;
+}
+
+h1 {
+  color: #2e8b57;
+  text-align: center;
+  margin-bottom: 5px;
+}
+
+h2 {
+  color: #2e8b57;
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.btn-custom {
+  background-color: #2e8b57;
+  color: white;
+  border-radius: 20px;
+  margin-top: 20px;
+}
+
+.btn-custom:hover {
+  background-color: #1c6e3f;
+}
+
+.produto-img {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 10px;
+  display: block;
+  margin: 0 auto;
+}
+
+.footer {
+  background-color: #2e8b57;
+  color: white;
+  text-align: center;
+  padding: 10px;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+}
+
+.product-card {
+  margin-bottom: 20px;
+  position: relative;
+  height: 100%;
+}
+
+.card-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+}
+
+.card-title {
+  font-size: 1.2rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.impacto-ambiental {
+  background-color: #ffcc00;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: bold;
+  color: #000;
+  text-align: center;
+  margin-top: 15px;
+  border: 2px solid #e6b800;
+}
+
+.valor-co2 {
+  color: #d9534f;
+  font-size: 20px;
+}
+
+.btn-custom-link {
+  background-color: #2e8b57;
+  color: white;
+  border-radius: 20px;
+  text-align: center;
+  display: block;
+  margin-top: 20px;
+  padding: 10px;
+}
+
+.selo-recomendacao {
+  background-color: #2e8b57;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 14px;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+.quantidade {
+  margin-top: 10px;
+}
+
+.explicacao-impacto {
+  font-size: 14px;
+  color: #555;
+  margin-top: 10px;
+}
+
+.logo {
+  display: block;
+  margin: 0 auto 10px auto;
+  width: 150px;
+}

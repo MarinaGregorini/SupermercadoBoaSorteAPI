@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block title %}Resumo da Compra | Supermercado Boa Sorte{% endblock %}
+
+{% block content %}
+<h2>Resumo da Compra</h2>
+<h4>Consumidor: {{ consumidor.nome }}</h4>
+<ul>
+    {% for produto, quantidade in produtos_selecionados %}
+    <li>
+        {{ produto.nome }} - Quantidade: {{ quantidade }} - Impacto Ambiental: {{ produto.custo_poluicao * quantidade }}
+    </li>
+    <button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#modal_{{ loop.index }}">
+        Saiba Mais
+    </button>
+    <div class="modal fade" id="modal_{{ loop.index }}" tabindex="-1" aria-labelledby="modalLabel_{{ loop.index }}"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalLabel_{{ loop.index }}">Detalhes do Impacto Ambiental</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        Este produto usou <strong>{{ produto.produtor.consumo_produto }}kWh</strong> para ser produzido.
+                        Ao ficar armazenado por <strong>{{ produto.produtor.dias_armazenado }} dias</strong>,
+                        gastou <strong>{{ produto.calcular_poluicao_producao() }}kW</strong>.
+                        <br>
+                        Transportado por <strong>{{ produto.transportadora.nome }}</strong>
+                        ({% if produto.transportadora.eletrica %}veículos elétricos{% else %}
+                        combustíveis fósseis{% endif %}),
+                        emitiu <strong>{{ produto.poluicao_transporte }}g de CO₂</strong>
+                        ao percorrer {{ produto.produtor.distancia_km }}km entre o local de produção e o Supermercado
+                        Boa Sorte.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</ul>
+<div class="impacto-ambiental">
+    <p><strong>Total do Impacto Ambiental:</strong> {{ total_poluicao }}</p>
+    <button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#impactoModal">
+        Detalhes
+    </button>
+</div>
+<div class="modal fade" id="impactoModal" tabindex="-1" aria-labelledby="impactoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="impactoModalLabel">Como o Impacto Ambiental é Calculado?</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>O impacto ambiental total é calculado somando o impacto de cada produto selecionado.</p>
+                <ul>
+                    <li><strong>Impacto do Produto:</strong> Cada produto tem um custo ambiental baseado na produção e
+                        transporte. Cada valor é colocado em um ranking de 0 a 3, onde 0 equivale ao menor
+                        impacto causado. Os valores dos dois rankings são então somados para obtermos o custo total do
+                        impacto ambiental.</li>
+                    <li><strong>Quantidade:</strong> Se um produto for comprado mais vezes, o impacto será multiplicado
+                        pela quantidade.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<a href="{{ url_for('escolher_produtos', consumidor_id=consumidor.id) }}" class="btn btn-custom w-100">Voltar para
+    Escolher Produtos</a>
+{% endblock %}
