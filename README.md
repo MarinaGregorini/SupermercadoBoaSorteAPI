@@ -29,6 +29,7 @@ Aceda ao portal do Azure e siga os passos:
 - Na aba **Discos**, configure:
   - **Tipo de disco**: LRS HDD Standard
   - **Tamanho**: 32 GiB
+- Na aba **Rede**, selecione a rede virtual criada anteriormente em **Rede Virtual**.
 
 ### 3️⃣ Conectar-se à VM via SSH
 ```bash
