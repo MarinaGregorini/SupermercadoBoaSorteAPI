@@ -74,10 +74,9 @@ pip install -r requirements.txt
 
 ## 🔗 Configuração do Armazenamento no Azure
 
-### 9️⃣ Criar a pasta `db-supermercado` e a subpasta `db` no Azure Storage
+### 9️⃣ Criar a pasta `db-supermercado` no Azure Storage
 Aceda à interface gráfica do Azure e:
 - Criar a pasta **db-supermercado**
-- Dentro dela, criar a subpasta **db**
 
 ### 🔟 Criar a pasta `db` localmente na VM
 ```bash
