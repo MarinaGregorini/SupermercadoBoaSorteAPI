@@ -1,14 +1,29 @@
+import os
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from models import db, Transportadora, Produtor, Produto, Consumidor, consumidor_produto
+from populate_db import popular_db
 
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:////home/grupo4/grupo4/SupermercadoBoaSorteAPI/db/db_supermercado.db"
+
+base_dir = os.path.abspath(os.path.dirname(__file__))
+db_dir = os.path.join(base_dir, 'db')
+if not os.path.exists(db_dir):
+    os.makedirs(db_dir)
+db_path = os.path.join(base_dir, 'db', 'db_supermercado.db')
+
+app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{db_path}"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db.init_app(app)
 
+def db_vazia():
+    return not any([Transportadora.query.first(), Produtor.query.first(), Produto.query.first()])
+
 with app.app_context():
     db.create_all()
+    
+    if db_vazia():
+        popular_db()
 
 @app.route('/', methods=['GET', 'POST'])
 def cadastro():
