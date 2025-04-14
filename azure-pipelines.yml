@@ -1,0 +1,17 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pool:
+  name: default
+
+jobs:
+  - job: Test
+    displayName: Test
+    steps:
+      - script: |
+          python3 -m venv .venv
+          source .venv/bin/activate
+          pip install -r requirements.txt
+        displayName: 'Setup'
