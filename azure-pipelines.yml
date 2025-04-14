@@ -7,11 +7,19 @@ pool:
   name: default
 
 jobs:
-  - job: Test
-    displayName: Test
+  - job: Setup
+    displayName: 'Setup'
     steps:
       - script: |
           python3 -m venv .venv
           source .venv/bin/activate
           pip install -r requirements.txt
         displayName: 'Setup'
+  - job: Lint
+    displayName: 'Run Lint Test'
+    steps: 
+      - script: |
+          source .venv/bin/activate
+          pip install flake8
+          flake8 .
+        displayName: 'Run Lint (flake8)'
