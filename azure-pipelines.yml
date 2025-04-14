@@ -15,7 +15,7 @@ jobs:
           source .venv/bin/activate
           pip install -r requirements.txt
         displayName: 'Setup'
-  - job: ConsumidorTest
+  - job: 'ConsumidorTest'
     displayName: 'Run Consumidor API Test'
     steps:
       - script: |
