@@ -15,12 +15,11 @@ jobs:
           source .venv/bin/activate
           pip install -r requirements.txt
         displayName: 'Setup'
-  - job: Lint
-    displayName: 'Run Lint Test'
-    steps: 
+  - job: ConsumidorTest
+    displayName: 'Run Consumidor API Test'
+    steps:
       - script: |
           python3 -m venv .venv
           source .venv/bin/activate
-          pip install flake8
-          flake8 ./app.py
-        displayName: 'Run Lint (flake8)'
+          python3 tests/test_api_script.py
+        isplayName: 'Run Consumidor API Test'
