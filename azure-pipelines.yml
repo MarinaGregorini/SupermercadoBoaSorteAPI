@@ -19,6 +19,7 @@ jobs:
     displayName: 'Run Lint Test'
     steps: 
       - script: |
+          python3 -m venv .venv
           source .venv/bin/activate
           pip install flake8
           flake8 .
