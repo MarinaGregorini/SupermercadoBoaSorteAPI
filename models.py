@@ -2,11 +2,28 @@ from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
-consumidor_produto = db.Table('consumidor_produto',
-    db.Column('consumidor_id', db.Integer, db.ForeignKey('consumidor.id'), primary_key=True),
-    db.Column('produto_id', db.Integer, db.ForeignKey('produto.id'), primary_key=True),
-    db.Column('quantidade', db.Integer, nullable=False, default=0)  # Guarda a quantidade escolhida
+consumidor_produto = db.Table(
+    'consumidor_produto',
+    db.Column(
+        'consumidor_id',
+        db.Integer,
+        db.ForeignKey('consumidor.id'),
+        primary_key=True
+        ),
+    db.Column(
+        'produto_id',
+        db.Integer,
+        db.ForeignKey('produto.id'),
+        primary_key=True
+        ),
+    db.Column(
+        'quantidade',
+        db.Integer,
+        nullable=False,
+        default=0
+        )  # Guarda a quantidade escolhida
 )
+
 
 class Transportadora(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -15,7 +32,11 @@ class Transportadora(db.Model):
     eletrica = db.Column(db.Boolean, default=False)
 
     def __repr__(self):
-        return f"Transportadora(nome={self.nome}, co2_km={self.co2_km}, eletrica={self.eletrica})"
+        return (
+            f"Transportadora(nome={self.nome}",
+            f"co2_km={self.co2_km}",
+            f"eletrica={self.eletrica})"
+        )
 
 
 class Produtor(db.Model):
@@ -27,24 +48,46 @@ class Produtor(db.Model):
     dias_armazenado = db.Column(db.Integer, nullable=False)
 
     def __repr__(self):
-        return f"Produtor(nome={self.nome}, consumo_produto={self.consumo_produto}, distancia_km={self.distancia_km})"
+        return (
+            f"Produtor(nome={self.nome}",
+            f"consumo_produto={self.consumo_produto}",
+            f"distancia_km={self.distancia_km})"
+        )
 
 
 class Produto(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
-    produtor_id = db.Column(db.Integer, db.ForeignKey('produtor.id'), nullable=False)
-    transportadora_id = db.Column(db.Integer, db.ForeignKey('transportadora.id'), nullable=False)
+    produtor_id = db.Column(
+        db.Integer, db.ForeignKey('produtor.id'),
+        nullable=False
+        )
+    transportadora_id = db.Column(
+        db.Integer, db.ForeignKey('transportadora.id'),
+        nullable=False
+        )
 
-    produtor = db.relationship('Produtor', backref=db.backref('produtos', lazy=True))
-    transportadora = db.relationship('Transportadora', backref=db.backref('produtos', lazy=True))
+    produtor = db.relationship(
+        'Produtor',
+        backref=db.backref('produtos', lazy=True)
+        )
+    transportadora = db.relationship(
+        'Transportadora',
+        backref=db.backref('produtos', lazy=True)
+        )
 
     def calcular_poluicao_producao(self):
-        poluicao_producao = self.produtor.consumo_produto + (self.produtor.dias_armazenado * self.produtor.consumo_diario)
+        poluicao_producao = (
+            self.produtor.consumo_produto +
+            (self.produtor.dias_armazenado * self.produtor.consumo_diario)
+        )
         return 1 if poluicao_producao <= 2 else 2
 
     def calcular_poluicao_transporte(self):
-        poluicao_transporte = self.produtor.distancia_km * self.transportadora.co2_km
+        poluicao_transporte = (
+         self.produtor.distancia_km *
+         self.transportadora.co2_km
+        )
         if self.transportadora.eletrica:
             return 0
         elif poluicao_transporte < 52000:
@@ -55,15 +98,23 @@ class Produto(db.Model):
 
     @property
     def custo_poluicao(self):
-        return self.calcular_poluicao_producao() + self.calcular_poluicao_transporte()
+        return (
+            self.calcular_poluicao_producao() +
+            self.calcular_poluicao_transporte()
+        )
 
     def __repr__(self):
-        return f"Produto(nome={self.nome}, produtor={self.produtor.nome}, transportadora={self.transportadora.nome}, custo_poluicao={self.custo_poluicao})"
+        return (
+            f"Produto(nome={self.nome}, "
+            f"produtor={self.produtor.nome}, "
+            f"transportadora={self.transportadora.nome}, "
+            f"custo_poluicao={self.custo_poluicao})"
+        )
 
 
 class Consumidor(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
-    
+
     def __repr__(self):
         return f"Consumidor(nome={self.nome}, id={self.id})"
