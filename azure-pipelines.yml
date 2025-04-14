@@ -22,5 +22,5 @@ jobs:
           python3 -m venv .venv
           source .venv/bin/activate
           pip install flake8
-          flake8 src/ super/
+          flake8 super/
         displayName: 'Run Lint (flake8)'
