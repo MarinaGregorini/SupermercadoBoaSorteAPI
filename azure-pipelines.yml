@@ -22,4 +22,4 @@ jobs:
           python3 -m venv .venv
           source .venv/bin/activate
           python3 tests/test_api_script.py
-        isplayName: 'Run Consumidor API Test'
+        displayName: 'Run Consumidor API Test'
