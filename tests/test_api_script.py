@@ -25,11 +25,9 @@ def test_create_and_get_consumidor():
         print(f"Texto da resposta POST: {response_post.text}")
         assert response_post.status_code == 201, f"Erro ao criar consumidor: {response_post.status_code} - {response_post.text}"
         created_consumidor = response_post.json()
-        print(f"Consumidor criado (JSON): {created_consumidor}")
         assert "id" in created_consumidor, "A resposta de criação não contém um 'id'."
         consumidor_id = created_consumidor["id"]
         assert created_consumidor["nome"] == new_consumidor["nome"], f"Nome do consumidor criado ({created_consumidor['nome']}) diferente do enviado ({new_consumidor['nome']})."
-        print(f"Consumidor criado com ID: {consumidor_id} e nome '{created_consumidor['nome']}'.")
     except requests.exceptions.ConnectionError as e:
         print(f"Erro de conexão ao criar consumidor: {e}")
         return
