@@ -17,7 +17,6 @@ six==1.17.0
 typing_extensions==4.13.0
 docker==6.0.1
 azure-cli-core==2.42.0
-azure-cli-container==2.0.70
 Flask-Login==0.6.2
 azure-webapp==2.0.1
 requests
