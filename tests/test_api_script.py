@@ -55,5 +55,5 @@ def test_create_and_get_consumidor():
     except requests.exceptions.ConnectionError as e:
         print(f"Erro de conexão ao listar consumidores: {e}")
 
-if _name_ == "_main_":
+if __name__ == "__main__":
     test_create_and_get_consumidor()
