@@ -27,8 +27,18 @@ jobs:
 
       - script: |
           docker run -d -p 8080:5000 --name supermercado-test-container supermercado-api:latest
+          echo "Aguardando o container subir..."
           sleep 10
-          curl --fail http://localhost:8080 || (echo "App não subiu corretamente" && docker logs supermercado-test-container && exit 1)
+
+          echo "Verificando se a aplicação está no ar..."
+          if curl --fail -s http://localhost:8080 > /dev/null; then
+            echo "App respondeu com sucesso!"
+          else
+            echo "App não subiu corretamente"
+            docker logs supermercado-test-container
+            exit 1
+          fi
+
           docker stop supermercado-test-container
           docker rm supermercado-test-container
         displayName: "Run container and check health"
