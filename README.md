@@ -1,203 +1,44 @@
-# Supermercado Boa Sorte - Deploy no Microsoft Azure
+# Supermercado API 🛒
 
-## Visão Geral
-Este projeto envolve a configuração e implementação de uma aplicação no Microsoft Azure, incluindo a criação de uma rede virtual, máquina virtual (VM), instalação de dependências e configuração de uma API acessível via Postman.
+Este projeto é uma API desenvolvida com **Flask** que simula um sistema de supermercado. A aplicação oferece endpoints REST, interface web com HTML e CSS, e está integrada a uma pipeline de CI/CD no **Azure DevOps**. Conta ainda com testes funcionais e de performance.
 
----
+## 🚀 Pipeline CI/CD - Azure DevOps
 
-## 🌐 Configuração da Rede Virtual no Azure
+Este projeto utiliza **Azure Pipelines** para executar uma série de validações automatizadas a cada push na branch `main`.
 
-### 1️⃣ Criar a Rede Virtual (VNet)
-Aceda ao portal do Azure e siga os passos:
-- Caminho: **Recursos** > **Redes Virtuais** > **Criar**
-- Na aba **Básico**, preencha todos os campos necessários.
-- Selecionar **Rever + Criar** > **Criar**.
+### 🔥 Gatilho
 
----
+A pipeline é acionada automaticamente com cada commit na branch `main`.
 
-## 🚀 Configuração da VM no Azure
+### 🛠️ Etapas do Pipeline
 
-### 2️⃣ Criar a Máquina Virtual
-Aceda ao portal do Azure e siga os passos:
-- Caminho: **Página Inicial** > **Criar um recurso** > **Máquina Virtual** > **Criar**
-- Na aba **Básico**, preencha com:
-  - **Subscrição**: FCUL-UPSKILL
-  - **Grupo de Recursos**: RG-UPSKILL-SysAdmin
-  - **Região**: Spain Central (Zona 3)
-  - **Imagem**: Linux (Ubuntu 24.04)
-  - **Tamanho**: Standard B1ms (1 vCPU, 2 GiB memória)
-- Na aba **Discos**, configure:
-  - **Tipo de disco**: LRS HDD Standard
-  - **Tamanho**: 32 GiB
-- Na aba **Rede**, selecione a rede virtual criada anteriormente em **Rede Virtual**.
+1. **LintTest** 🧹  
+   - Instala as dependências.  
+   - Executa o `flake8` para verificar o estilo de código nos principais arquivos `.py`.
 
-### 3️⃣ Conectar-se à VM via SSH
-```bash
-ssh grupo4@68.221.171.29
-```
+2. **TestAPI** 🔍  
+   - Sobe o servidor Flask localmente.  
+   - Executa `tests/teste_api.py` para validar os endpoints de criação e listagem de consumidores.
 
----
+3. **BuildAndRun** 🏗️  
+   - Constrói a imagem Docker da aplicação (`supermercado-api:latest`).  
+   - Sobe um container para garantir que a aplicação responde na porta 8080.  
+   - Verifica a saúde da aplicação via `curl`.
 
-## 📦 Configuração do Ambiente
+4. **Locust** 🚀  
+   - Executa testes de performance simulando múltiplos usuários acessando a API.  
+   - Usa o arquivo `tests/locustfile.py` para simular requisições GET e POST para `/api/consumidores/`.
 
-### 4️⃣ Atualizar pacotes do sistema e instalar dependências essenciais
-```bash
-sudo apt update && sudo apt upgrade -y
-sudo apt install -y python3-pip python3.12-venv
-```
+## 📋 Requisitos
 
-### 5️⃣ Criar a estrutura do projeto
-```bash
-mkdir grupo4
-cd grupo4
-```
-
-### 6️⃣ Clonar o repositório do projeto
-```bash
-git clone http://github.com/MarinaGregorini/SupermercadoBoaSorteAPI.git
-cd SupermercadoBoaSorteAPI
-```
-
-### 7️⃣ Criar e ativar o ambiente virtual
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
-### 8️⃣ Atualizar pip e instalar as dependências do projeto
-```bash
-pip install --upgrade pip
-pip install -r requirements.txt
-```
-
----
-
-## 🔗 Configuração do Armazenamento no Azure
-
-### 9️⃣ Criar a pasta `db-supermercado` no Azure Storage
-Aceda à interface gráfica do Azure e:
-- Criar a pasta **db-supermercado**
-
-### 🔟 Criar a pasta `db` localmente na VM
-```bash
-mkdir -p /home/grupo4/grupo4/SupermercadoBoaSorteAPI/db
-```
-
-### 1️⃣1️⃣ Criar credenciais para armazenamento no Azure
-Crie o ficheiro `/etc/azurefiles.cred`:
-```bash
-sudo nano /etc/azurefiles.cred
-```
-Adicione as credenciais:
-```
-username=[NOME_DA_CONTA_DE_ARMAZENAMENTO]
-password=[CHAVE_DA_CONTA_DE_ARMAZENAMENTO]
-```
-
-### 1️⃣2️⃣ Montar a pasta da WebApp
-Edite o ficheiro `/etc/fstab`:
-```bash
-sudo nano /etc/fstab
-```
-Adicione a seguinte linha ao final:
-```bash
-//tiagosilva1.file.core.windows.net/db-supermercado /home/grupo4/grupo4/SupermercadoBoaSorteAPI/db cifs credentials=/etc/azurefiles.cred,vers=3.0,serverino,dir_mode=0777,file_mode=0777,nobrl 0 0
-```
-
-### 1️⃣3️⃣ Aplicar as configurações e testar a montagem
-```bash
-sudo systemctl daemon-reload
-sudo mount -a
-```
-
----
-
-## 🔥 Configuração de Rede
-
-### 1️⃣4️⃣ Abrir a porta 5000 no Azure
-1. Aceda ao portal do Azure.
-2. Vá até **Rede** > **Configurações da Rede** > **Criar Regra de Portas**.
-3. Adicione a porta **5000** para entrada e saída.
-
----
-
-## 📡 Executar a Aplicação
-
-### 1️⃣5️⃣ Criar e popular a base de dados
-```bash
-python app.py  # Criar a base de dados
-python populate_db.py  # Popular a base de dados
-```
-
-### 1️⃣6️⃣ Iniciar a aplicação
-```bash
-python app.py
-```
-
-Agora a aplicação estará acessível em:
-```
-http://68.221.171.29:5000
-```
-
----
-
-## 🛠️ Testar a API via Postman
-
-### 1️⃣7️⃣ Listar transportadoras, produtores e produtos
-```http
-GET http://68.221.171.29:5000/api/transportadoras/
-GET http://68.221.171.29:5000/api/produtores/
-GET http://68.221.171.29:5000/api/produtos/
-```
-
-### 1️⃣8️⃣ Criar um consumidor
-```http
-POST http://68.221.171.29:5000/api/consumidores/
-```
-**Body (JSON):**
-```json
-{
-  "nome": "Nome do Consumidor"
-}
-```
-
-### 1️⃣9️⃣ Listar consumidores
-```http
-GET http://68.221.171.29:5000/api/consumidores/
-```
-
-### 2️⃣0️⃣ Criar um pedido
-```http
-POST http://68.221.171.29:5000/api/consumidores/<int:consumidor_id>/produtos/
-```
-**Body (JSON):**
-```json
-{
-  "produtos": [
-    {"produto_id": int:ID, "quantidade": int:QUANTIDADE}
-  ]
-}
-```
-
-### 2️⃣1️⃣ Ver detalhes do pedido
-```http
-GET http://68.221.171.29:5000/api/consumidores/<id:consumidor>/resumo
-```
-
----
-
-## 💰 Custos Estimados
-
-| Categoria | Serviço | Região | Descrição | Custo Estimado Mensal |
-|-----------|---------|--------|------------|----------------------|
-| Computação | Virtual Machines | Spain Central | 1 B1ms (1 Core, 2 GB RAM, 32GB HDD Standard) x 730 Horas (Pay as you go), Linux; 1 managed disk – S4; Inter Region transfer type, 5 GB outbound data transfer de Espanha Central para Ásia Leste | €16,90 |
-| Computação | App Service | Spain Central | Escalão Gratuito; 1 (0 núcleo(s), 0 GB de RAM, armazenamento 0 de GB) x 730 Horas; SO Linux | €0,00 |
-| Armazenamento | Storage Accounts | Spain Central | Armazenamento de Blobs de Blocos, Fins Gerais V2, Espaço de Nomes Não Hierárquico, LRS Redundância, Escalão de acesso Frequente, 6 GB Capacidade - \"Pay-As-You-Go\", 100 x 10 000 operações de Escrita, 5 x 10 000 Operações de Listagem e de Criação de Contentores, 300 x 10 000 operações de Leitura, 100 x 10 000 Outras operações. 1000 GB Obtenção de Dados, 1000 GB Escrita de Dados, SFTP desativado | €6,74 |
-| Suporte | Support | - | - | €0,00 |
-| **Total** | - | - | - | **€23,64** |
+- **Python 3.8+** 🐍
+- **Docker** 🐳
+- **Azure DevOps** (com agente configurado) ☁️
 
 ## 👥 Equipa
-- **Bruna Dutra**
-- **Marina Gregorini**
-- **Marta Martins**
-- **Tiago Silva**
+
+- **Bruna Dutra** 👩‍💻
+- **Marina Gregorini** 👩‍💻
+- **Marta Martins** 👩‍💻
+- **Tiago Silva** 👨‍💻
+
