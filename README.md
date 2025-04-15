@@ -39,26 +39,27 @@ A pipeline é acionada automaticamente com cada commit na branch `main`.
 
 ```plaintext
 .
-├── azure-pipelines.yml      # Arquivo de configuração da pipeline do Azure DevOps
-├── Dockerfile               # Arquivo para criação da imagem Docker
-├── README.md                # Este arquivo
-├── app.py                   # Arquivo principal da aplicação Flask
+├── azure-pipelines.yml
+├── Dockerfile
+├── README.md
+├── app.py
 ├── db/
-│   └── db_supermercado.db   # Banco de dados SQLite
-├── models.py                # Definição dos modelos de dados
-├── populate_db.py           # Script para popular o banco de dados
-├── requirements.txt         # Dependências do projeto
-├── scriptVM.sh              # Script para inicialização de máquina virtual
+│   └── db_supermercado.db
+├── models.py
+├── populate_db.py
+├── requirements.txt
+├── scriptVM.sh
 ├── static/
-│   └── styles.css           # Arquivo de estilos CSS
+│   └── styles.css
 ├── templates/
-│   ├── base.html            # Template base da aplicação
-│   ├── cadastro.html        # Template de cadastro de consumidores
-│   ├── escolher_produtos.html # Template para escolha de produtos
-│   └── resumo_compra.html   # Template de resumo da compra
+│   ├── base.html
+│   ├── cadastro.html
+│   ├── escolher_produtos.html
+│   └── resumo_compra.html
 ├── tests/
-│   ├── locustfile.py        # Arquivo de testes de performance com Locust
-│   └── teste_api.py         # Testes dos endpoints da API
+│   ├── locustfile.py
+│   └── teste_api.py
+```
 
 ## 👥 Equipa
 
