@@ -10,7 +10,7 @@ CONSUMIDORES_ENDPOINT = f"{BASE_URL}/api/consumidores/"
 
 def test_create_and_get_consumidor():
     """Testa a criação de um consumidor via POST e sua listagem via GET."""
-    new_consumidor = {"nome": "Tiago"}
+    new_consumidor = {"nome": "Consumidor1"}
     headers = {"Content-Type": "application/json"}
 
     print("\n--- Teste de Criação de Consumidor ---")
