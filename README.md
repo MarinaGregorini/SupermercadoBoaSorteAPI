@@ -31,12 +31,13 @@ A pipeline é acionada automaticamente com cada commit na branch `main`.
 
 ## 📋 Requisitos
 
-- **Python 3.8+**
-- **Docker**
-- **Azure DevOps** (com agente configurado)
+- **Python 3.8+** 🐍
+- **Docker** 🐳
+- **Azure DevOps** (com agente configurado) ☁️
 
 ## 🗂️ Estrutura de Diretórios
 
+```plaintext
 .
 ├── azure-pipelines.yml      # Arquivo de configuração da pipeline do Azure DevOps
 ├── Dockerfile               # Arquivo para criação da imagem Docker
@@ -58,7 +59,6 @@ A pipeline é acionada automaticamente com cada commit na branch `main`.
 ├── tests/
 │   ├── locustfile.py        # Arquivo de testes de performance com Locust
 │   └── teste_api.py         # Testes dos endpoints da API
-
 
 ## 👥 Equipa
 
