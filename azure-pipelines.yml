@@ -45,14 +45,7 @@ jobs:
   - job: BuildAndRun
     displayName: "Build and Run Application in Docker (Staging)"
     dependsOn: TestAPI
-    pool:
-      vmImage: "ubuntu-latest"
     steps:
-      - task: UsePythonVersion@0
-        inputs:
-          versionSpec: "3.12"
-          addToPath: true
-
       - script: |
           python -m venv .venv
           source .venv/bin/activate
@@ -67,9 +60,9 @@ jobs:
           tags: "supermercado-api:latest"
 
       - script: |
-          docker run -d -p 5000:5000 --name supermercado-test-container supermercado-api:latest
+          docker run -d -p 8080:8080 --name supermercado-test-container supermercado-api:latest
           sleep 10
-          curl --fail http://localhost:5000 || (echo "App não subiu corretamente" && docker logs supermercado-test-container && exit 1)
+          curl --fail http://localhost:8080 || (echo "App não subiu corretamente" && docker logs supermercado-test-container && exit 1)
           docker stop supermercado-test-container
           docker rm supermercado-test-container
         displayName: "Run container and check health"
