@@ -10,7 +10,7 @@ CONSUMIDORES_ENDPOINT = f"{BASE_URL}/api/consumidores/"
 
 def test_create_and_get_consumidor():
     """Testa a criação de um consumidor via POST e sua listagem via GET."""
-    new_consumidor = {"nome": "Verbose Test Consumidor Script"}
+    new_consumidor = {"nome": "Tiago"}
     headers = {"Content-Type": "application/json"}
 
     print("\n--- Teste de Criação de Consumidor ---")
@@ -25,7 +25,6 @@ def test_create_and_get_consumidor():
             json=new_consumidor
         )
         print(f"Status POST: {response_post.status_code}")
-        print(f"Resposta POST: {response_post.text}")
 
         assert response_post.status_code == 201, (
             f"Erro ao criar consumidor: {response_post.status_code} - "
