@@ -25,7 +25,7 @@ A pipeline é acionada automaticamente com cada commit na branch `main`.
    - Sobe um container para garantir que a aplicação responde na porta 8080.  
    - Verifica a saúde da aplicação via `curl`.
 
-4. **Locust** 
+4. **Locust**  
    - Executa testes de performance simulando múltiplos usuários acessando a API.  
    - Usa o arquivo `tests/locustfile.py` para simular requisições GET e POST para `/api/consumidores/`.
 
@@ -34,6 +34,31 @@ A pipeline é acionada automaticamente com cada commit na branch `main`.
 - **Python 3.8+**
 - **Docker**
 - **Azure DevOps** (com agente configurado)
+
+## 🗂️ Estrutura de Diretórios
+
+.
+├── azure-pipelines.yml      # Arquivo de configuração da pipeline do Azure DevOps
+├── Dockerfile               # Arquivo para criação da imagem Docker
+├── README.md                # Este arquivo
+├── app.py                   # Arquivo principal da aplicação Flask
+├── db/
+│   └── db_supermercado.db   # Banco de dados SQLite
+├── models.py                # Definição dos modelos de dados
+├── populate_db.py           # Script para popular o banco de dados
+├── requirements.txt         # Dependências do projeto
+├── scriptVM.sh              # Script para inicialização de máquina virtual
+├── static/
+│   └── styles.css           # Arquivo de estilos CSS
+├── templates/
+│   ├── base.html            # Template base da aplicação
+│   ├── cadastro.html        # Template de cadastro de consumidores
+│   ├── escolher_produtos.html # Template para escolha de produtos
+│   └── resumo_compra.html   # Template de resumo da compra
+├── tests/
+│   ├── locustfile.py        # Arquivo de testes de performance com Locust
+│   └── teste_api.py         # Testes dos endpoints da API
+
 
 ## 👥 Equipa
 
