@@ -20,9 +20,10 @@ jobs:
         displayName: "Build Docker image"
         inputs:
           command: "build"
-          Dockerfile: "./Dockerfile"
-          tags: "supermercado-api:latest"
           repository: "supermercado-api"
+          Dockerfile: "Dockerfile"
+          tags: |
+            latest
 
       - script: |
           docker run -d -p 8080:8080 --name supermercado-test-container supermercado-api:latest
