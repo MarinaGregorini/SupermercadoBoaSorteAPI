@@ -26,7 +26,7 @@ jobs:
             latest
 
       - script: |
-          docker run -d -p 8080:8080 --name supermercado-test-container supermercado-api:latest
+          docker run -d -p 8080:5000 --name supermercado-test-container supermercado-api:latest
           sleep 10
           curl --fail http://localhost:8080 || (echo "App não subiu corretamente" && docker logs supermercado-test-container && exit 1)
           docker stop supermercado-test-container
