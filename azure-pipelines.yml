@@ -23,5 +23,5 @@ jobs:
         displayName: "Start Flask server"
 
       - script: |
-          locust -f tests/locustfile.py --host=http://localhost:5000 --headless -u 10 -r 2 -t 30s
+          locust -f tests/locustfile.py --host=http://localhost:5000 --headless -u 10 -r 2 -t 30s
         displayName: "Run Locust"
