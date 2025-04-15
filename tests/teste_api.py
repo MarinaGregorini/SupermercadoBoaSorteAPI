@@ -57,7 +57,6 @@ def test_create_and_get_consumidor():
         )
 
         all_consumidores = response_get.json()
-        print(f"Lista de consumidores: {all_consumidores}")
 
         found = any(
             c["id"] == consumidor_id and c["nome"] == new_consumidor["nome"]
@@ -69,10 +68,6 @@ def test_create_and_get_consumidor():
             f"'{new_consumidor['nome']}' não encontrado"
         )
 
-        print(
-            f"Consumidor ID {consumidor_id} com nome "
-            f"'{new_consumidor['nome']}' encontrado"
-        )
     except requests.exceptions.ConnectionError as e:
         print(f"Erro de conexão ao listar: {e}")
 
