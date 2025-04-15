@@ -12,33 +12,33 @@ A pipeline é acionada automaticamente com cada commit na branch `main`.
 
 ### 🛠️ Etapas do Pipeline
 
-1. **LintTest** 🧹  
+1. **LintTest**  
    - Instala as dependências.  
    - Executa o `flake8` para verificar o estilo de código nos principais arquivos `.py`.
 
-2. **TestAPI** 🔍  
+2. **TestAPI**  
    - Sobe o servidor Flask localmente.  
    - Executa `tests/teste_api.py` para validar os endpoints de criação e listagem de consumidores.
 
-3. **BuildAndRun** 🏗️  
+3. **BuildAndRun**  
    - Constrói a imagem Docker da aplicação (`supermercado-api:latest`).  
    - Sobe um container para garantir que a aplicação responde na porta 8080.  
    - Verifica a saúde da aplicação via `curl`.
 
-4. **Locust** 🚀  
+4. **Locust** 
    - Executa testes de performance simulando múltiplos usuários acessando a API.  
    - Usa o arquivo `tests/locustfile.py` para simular requisições GET e POST para `/api/consumidores/`.
 
 ## 📋 Requisitos
 
-- **Python 3.8+** 🐍
-- **Docker** 🐳
-- **Azure DevOps** (com agente configurado) ☁️
+- **Python 3.8+**
+- **Docker**
+- **Azure DevOps** (com agente configurado)
 
 ## 👥 Equipa
 
-- **Bruna Dutra** 👩‍💻
-- **Marina Gregorini** 👩‍💻
-- **Marta Martins** 👩‍💻
-- **Tiago Silva** 👨‍💻
+- **Bruna Dutra** 
+- **Marina Gregorini** 
+- **Marta Martins** 
+- **Tiago Silva**
 
