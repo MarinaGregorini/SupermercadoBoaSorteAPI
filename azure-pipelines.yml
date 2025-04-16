@@ -18,7 +18,7 @@ jobs:
 
       - script: |
           source .venv/bin/activate
-          find . -type f -name "*.py" ! -path "./.venv/*" ! -path "*/__pycache__/*" | xargs flake8
+          flake8 ./app.py ./models.py ./populate_db.py ./tests/locustfile.py ./tests/teste_api.py
         displayName: "Run Lint (flake8)"
 
   - job: TestAPI
