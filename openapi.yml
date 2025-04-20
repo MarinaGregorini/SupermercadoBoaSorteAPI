@@ -1,0 +1,299 @@
+openapi: 3.0.3
+info:
+  title: Supermercado Boa Sorte API
+  version: "1.0"
+  description: API para gerir consumidores, produtos, transportadoras e calcular impacto ambiental.
+servers:
+  - url: http://localhost:5000
+
+paths:
+  /api/consumidores/:
+    get:
+      summary: Listar consumidores
+      responses:
+        "200":
+          description: Lista de consumidores
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Consumidor"
+              example:
+                - id: 1
+                  nome: João Silva
+                - id: 2
+                  nome: Maria Santos
+    post:
+      summary: Criar novo consumidor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConsumidorInput"
+            example:
+              nome: tiago
+      responses:
+        "201":
+          description: Consumidor criado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Consumidor"
+              example:
+                id: 3
+                nome: tiago
+        "400":
+          description: Dados inválidos
+
+  /api/transportadoras/:
+    get:
+      summary: Listar transportadoras
+      responses:
+        "200":
+          description: Lista de transportadoras
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Transportadora"
+              example:
+                - id: 1
+                  nome: EcoTrans
+                  co2_km: 0
+                  eletrica: true
+                - id: 2
+                  nome: FastDelivery
+                  co2_km: 738
+                  eletrica: false
+
+  /api/produtores/:
+    get:
+      summary: Listar produtores
+      responses:
+        "200":
+          description: Lista de produtores
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Produtor"
+              example:
+                - id: 1
+                  nome: Fazenda Verde
+                  consumo_produto: 2.1
+                  consumo_diario: 0.2
+                  distancia_km: 100
+                  dias_armazenado: 3
+                - id: 2
+                  nome: AgroVida
+                  consumo_produto: 1.5
+                  consumo_diario: 0.2
+                  distancia_km: 70
+                  dias_armazenado: 4
+                - id: 3
+                  nome: EcoFrutas
+                  consumo_produto: 1.8
+                  consumo_diario: 0.1
+                  distancia_km: 150
+                  dias_armazenado: 2
+
+  /api/produtos/:
+    get:
+      summary: Listar produtos
+      responses:
+        "200":
+          description: Lista de produtos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Produto"
+              example:
+                - id: 1
+                  nome: Maçã A
+                  produtor_id: 1
+                  transportadora_id: 1
+                  custo_poluicao: 0.0
+                - id: 2
+                  nome: Laranja B
+                  produtor_id: 2
+                  transportadora_id: 1
+                  custo_poluicao: 0.0
+
+  /api/consumidores/{consumidor_id}/produtos/:
+    post:
+      summary: Consumidor escolhe produtos
+      parameters:
+        - name: consumidor_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                produtos:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      produto_id:
+                        type: integer
+                      quantidade:
+                        type: integer
+            example:
+              produtos:
+                - produto_id: 1
+                  quantidade: 3
+                - produto_id: 5
+                  quantidade: 2
+      responses:
+        "201":
+          description: Produtos atribuídos ao consumidor
+        "400":
+          description: Dados inválidos
+        "404":
+          description: Consumidor não encontrado
+
+  /api/consumidores/{consumidor_id}/resumo/:
+    get:
+      summary: Resumo da compra de um consumidor
+      parameters:
+        - name: consumidor_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Resumo da compra
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  consumidor:
+                    $ref: "#/components/schemas/Consumidor"
+                  total_poluicao:
+                    type: number
+                    format: float
+                  produtos_selecionados:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        produto:
+                          $ref: "#/components/schemas/Produto"
+                        quantidade:
+                          type: integer
+              example:
+                consumidor:
+                  id: 1
+                  nome: João Silva
+                total_poluicao: 9.1
+                produtos_selecionados:
+                  - produto:
+                      id: 1
+                      nome: Maçã A
+                      produtor_id: 1
+                      transportadora_id: 1
+                      custo_poluicao: 0.0
+                    quantidade: 3
+                  - produto:
+                      id: 5
+                      nome: Laranja B
+                      produtor_id: 2
+                      transportadora_id: 1
+                      custo_poluicao: 0.0
+                    quantidade: 2
+        "404":
+          description: Consumidor não encontrado
+
+components:
+  schemas:
+    Consumidor:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        nome:
+          type: string
+          example: João Silva
+
+    ConsumidorInput:
+      type: object
+      required:
+        - nome
+      properties:
+        nome:
+          type: string
+          example: Carla Ribeiro
+
+    Produto:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        nome:
+          type: string
+          example: Maçã A
+        produtor_id:
+          type: integer
+          example: 1
+        transportadora_id:
+          type: integer
+          example: 1
+        custo_poluicao:
+          type: number
+          format: float
+          example: 0.0
+
+    Transportadora:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 2
+        nome:
+          type: string
+          example: FastDelivery
+        co2_km:
+          type: number
+          format: float
+          example: 738
+        eletrica:
+          type: boolean
+          example: false
+
+    Produtor:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 3
+        nome:
+          type: string
+          example: EcoFrutas
+        consumo_produto:
+          type: number
+          example: 1.8
+        consumo_diario:
+          type: number
+          example: 0.1
+        distancia_km:
+          type: number
+          example: 150
+        dias_armazenado:
+          type: integer
+          example: 2

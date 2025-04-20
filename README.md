@@ -1,203 +1,156 @@
-# Supermercado Boa Sorte - Deploy no Microsoft Azure
+# Supermercado API
 
-## Visão Geral
-Este projeto envolve a configuração e implementação de uma aplicação no Microsoft Azure, incluindo a criação de uma rede virtual, máquina virtual (VM), instalação de dependências e configuração de uma API acessível via Postman.
+Este projeto é uma API desenvolvida com **Flask** que simula um sistema de supermercado. A aplicação oferece endpoints REST, interface web com HTML e CSS, e está integrada a um sistema de CI/CD no **Azure DevOps** e no **GitHub Actions**. Conta ainda com testes funcionais e de performance.
 
----
+## Pipelines CI/CD
 
-## 🌐 Configuração da Rede Virtual no Azure
+Este projeto utiliza **duas abordagens de integração contínua**:
 
-### 1️⃣ Criar a Rede Virtual (VNet)
-Aceda ao portal do Azure e siga os passos:
-- Caminho: **Recursos** > **Redes Virtuais** > **Criar**
-- Na aba **Básico**, preencha todos os campos necessários.
-- Selecionar **Rever + Criar** > **Criar**.
+### GitHub Actions (CI/CD)
 
----
+- **Localização:** `.github/workflows/`
 
-## 🚀 Configuração da VM no Azure
+#### Workflows definidos
 
-### 2️⃣ Criar a Máquina Virtual
-Aceda ao portal do Azure e siga os passos:
-- Caminho: **Página Inicial** > **Criar um recurso** > **Máquina Virtual** > **Criar**
-- Na aba **Básico**, preencha com:
-  - **Subscrição**: FCUL-UPSKILL
-  - **Grupo de Recursos**: RG-UPSKILL-SysAdmin
-  - **Região**: Spain Central (Zona 3)
-  - **Imagem**: Linux (Ubuntu 24.04)
-  - **Tamanho**: Standard B1ms (1 vCPU, 2 GiB memória)
-- Na aba **Discos**, configure:
-  - **Tipo de disco**: LRS HDD Standard
-  - **Tamanho**: 32 GiB
-- Na aba **Rede**, selecione a rede virtual criada anteriormente em **Rede Virtual**.
+1. **testes.yml**
+   - **Gatilho:** `push` na branch `teste`.
+   - **Etapas:**
+     - Instalação de dependências.
+     - Lint com `flake8`.
+     - Testes funcionais com `python tests/teste_api.py`.
 
-### 3️⃣ Conectar-se à VM via SSH
-```bash
-ssh grupo4@68.221.171.29
-```
+2. **build-and-loadtest.yml**
+   - **Gatilho:** Pull Requests da branch `teste` para `main`.
+   - **Etapas:**
+     - Build da imagem Docker.
+     - Verificação da aplicação via container (`curl`).
+     - Teste de carga com `Locust`.
 
 ---
 
-## 📦 Configuração do Ambiente
+### Azure Pipelines
 
-### 4️⃣ Atualizar pacotes do sistema e instalar dependências essenciais
-```bash
-sudo apt update && sudo apt upgrade -y
-sudo apt install -y python3-pip python3.12-venv
-```
+- **Localização:** `.azure/`
 
-### 5️⃣ Criar a estrutura do projeto
-```bash
-mkdir grupo4
-cd grupo4
-```
+#### pipeline-commit.yml
 
-### 6️⃣ Clonar o repositório do projeto
+- **Gatilho:** Commits na branch `teste`.
+
+##### Etapas:
+
+1. **LintTest**  
+   - Verifica a formatação com `flake8`.
+
+2. **TestAPI**  
+   - Inicia o Flask localmente.
+   - Executa `tests/teste_api.py`.
+
+#### pipeline-pr.yml
+
+- **Gatilho:** Pull Requests da branch `teste` para `main`.
+
+##### Etapas:
+
+1. **BuildAndRun**  
+   - Constrói a imagem Docker.  
+   - Executa container e valida com `curl`.
+
+2. **Locust**  
+   - Testes de performance com múltiplos utilizadores.
+
+---
+
+## Requisitos
+
+- **Python 3.8+**  
+- **Docker**  
+- **Azure DevOps** (com agente configurado)
+
+---
+
+## Como Executar o Projeto
+
+### 1. Clonar o Repositório
+
 ```bash
-git clone http://github.com/MarinaGregorini/SupermercadoBoaSorteAPI.git
+git clone https://github.com/MarinaGregorini/SupermercadoBoaSorteAPI.git
 cd SupermercadoBoaSorteAPI
 ```
 
-### 7️⃣ Criar e ativar o ambiente virtual
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-```
+### 2. Criar um Ambiente Virtual e Instalar Dependências
 
-### 8️⃣ Atualizar pip e instalar as dependências do projeto
 ```bash
-pip install --upgrade pip
+python -m venv venv
+source venv/bin/activate  # No Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
----
+### 3. Executar a Aplicação
 
-## 🔗 Configuração do Armazenamento no Azure
-
-### 9️⃣ Criar a pasta `db-supermercado` no Azure Storage
-Aceda à interface gráfica do Azure e:
-- Criar a pasta **db-supermercado**
-
-### 🔟 Criar a pasta `db` localmente na VM
-```bash
-mkdir -p /home/grupo4/grupo4/SupermercadoBoaSorteAPI/db
-```
-
-### 1️⃣1️⃣ Criar credenciais para armazenamento no Azure
-Crie o ficheiro `/etc/azurefiles.cred`:
-```bash
-sudo nano /etc/azurefiles.cred
-```
-Adicione as credenciais:
-```
-username=[NOME_DA_CONTA_DE_ARMAZENAMENTO]
-password=[CHAVE_DA_CONTA_DE_ARMAZENAMENTO]
-```
-
-### 1️⃣2️⃣ Montar a pasta da WebApp
-Edite o ficheiro `/etc/fstab`:
-```bash
-sudo nano /etc/fstab
-```
-Adicione a seguinte linha ao final:
-```bash
-//tiagosilva1.file.core.windows.net/db-supermercado /home/grupo4/grupo4/SupermercadoBoaSorteAPI/db cifs credentials=/etc/azurefiles.cred,vers=3.0,serverino,dir_mode=0777,file_mode=0777,nobrl 0 0
-```
-
-### 1️⃣3️⃣ Aplicar as configurações e testar a montagem
-```bash
-sudo systemctl daemon-reload
-sudo mount -a
-```
-
----
-
-## 🔥 Configuração de Rede
-
-### 1️⃣4️⃣ Abrir a porta 5000 no Azure
-1. Aceda ao portal do Azure.
-2. Vá até **Rede** > **Configurações da Rede** > **Criar Regra de Portas**.
-3. Adicione a porta **5000** para entrada e saída.
-
----
-
-## 📡 Executar a Aplicação
-
-### 1️⃣5️⃣ Criar e popular a base de dados
-```bash
-python app.py  # Criar a base de dados
-python populate_db.py  # Popular a base de dados
-```
-
-### 1️⃣6️⃣ Iniciar a aplicação
 ```bash
 python app.py
 ```
 
-Agora a aplicação estará acessível em:
-```
-http://68.221.171.29:5000
-```
+### 4. Aceder à Web App
 
----
+Depois de iniciar a aplicação, abra o navegador e aceda a:
 
-## 🛠️ Testar a API via Postman
-
-### 1️⃣7️⃣ Listar transportadoras, produtores e produtos
-```http
-GET http://68.221.171.29:5000/api/transportadoras/
-GET http://68.221.171.29:5000/api/produtores/
-GET http://68.221.171.29:5000/api/produtos/
-```
-
-### 1️⃣8️⃣ Criar um consumidor
-```http
-POST http://68.221.171.29:5000/api/consumidores/
-```
-**Body (JSON):**
-```json
-{
-  "nome": "Nome do Consumidor"
-}
-```
-
-### 1️⃣9️⃣ Listar consumidores
-```http
-GET http://68.221.171.29:5000/api/consumidores/
-```
-
-### 2️⃣0️⃣ Criar um pedido
-```http
-POST http://68.221.171.29:5000/api/consumidores/<int:consumidor_id>/produtos/
-```
-**Body (JSON):**
-```json
-{
-  "produtos": [
-    {"produto_id": int:ID, "quantidade": int:QUANTIDADE}
-  ]
-}
-```
-
-### 2️⃣1️⃣ Ver detalhes do pedido
-```http
-GET http://68.221.171.29:5000/api/consumidores/<id:consumidor>/resumo
+```bash
+http://127.0.0.1:5000/
 ```
 
 ---
 
-## 💰 Custos Estimados
+## Funcionalidades da Aplicação
 
-| Categoria | Serviço | Região | Descrição | Custo Estimado Mensal |
-|-----------|---------|--------|------------|----------------------|
-| Computação | Virtual Machines | Spain Central | 1 B1ms (1 Core, 2 GB RAM, 32GB HDD Standard) x 730 Horas (Pay as you go), Linux; 1 managed disk – S4; Inter Region transfer type, 5 GB outbound data transfer de Espanha Central para Ásia Leste | €16,90 |
-| Computação | App Service | Spain Central | Escalão Gratuito; 1 (0 núcleo(s), 0 GB de RAM, armazenamento 0 de GB) x 730 Horas; SO Linux | €0,00 |
-| Armazenamento | Storage Accounts | Spain Central | Armazenamento de Blobs de Blocos, Fins Gerais V2, Espaço de Nomes Não Hierárquico, LRS Redundância, Escalão de acesso Frequente, 6 GB Capacidade - \"Pay-As-You-Go\", 100 x 10 000 operações de Escrita, 5 x 10 000 Operações de Listagem e de Criação de Contentores, 300 x 10 000 operações de Leitura, 100 x 10 000 Outras operações. 1000 GB Obtenção de Dados, 1000 GB Escrita de Dados, SFTP desativado | €6,74 |
-| Suporte | Support | - | - | €0,00 |
-| **Total** | - | - | - | **€23,64** |
+- Identificação do utilizador  
+- Escolha de produtos com sugestões ambientalmente sustentáveis  
+- Cálculo do impacto ambiental dos produtos  
+- Resumo dos produtos seleccionados  
 
-## 👥 Equipa
-- **Bruna Dutra**
-- **Marina Gregorini**
-- **Marta Martins**
+---
+
+## Tecnologias Utilizadas
+
+- **Python (Flask)**  
+- **HTML, CSS (Bootstrap)**  
+- **SQLite**
+
+---
+
+## Estrutura de Diretórios
+
+```plaintext
+.
+├── .azure/
+│   ├── pipeline-commit.yml
+│   └── pipeline-pr.yml
+├── Dockerfile
+├── README.md
+├── app.py
+├── db/
+│   └── db_supermercado.db
+├── models.py
+├── populate_db.py
+├── requirements.txt
+├── scriptVM.sh
+├── static/
+│   └── styles.css
+├── templates/
+│   ├── base.html
+│   ├── cadastro.html
+│   ├── escolher_produtos.html
+│   └── resumo_compra.html
+├── tests/
+│   ├── locustfile.py
+│   └── teste_api.py
+```
+
+---
+
+## Equipa
+
+- **Bruna Dutra**  
+- **Marina Gregorini**  
+- **Marta Martins**  
 - **Tiago Silva**
