@@ -1,5 +1,7 @@
 [![Python CI](https://github.com/MarinaGregorini/SupermercadoBoaSorteAPI/actions/workflows/testes-commit.yml/badge.svg?branch=teste&event=push)](https://github.com/MarinaGregorini/SupermercadoBoaSorteAPI/actions/workflows/testes-commit.yml)
 
+[![Docker Build and Load Test](https://github.com/MarinaGregorini/SupermercadoBoaSorteAPI/actions/workflows/testes-pr.yml/badge.svg?branch=main&event=pull_request)](https://github.com/MarinaGregorini/SupermercadoBoaSorteAPI/actions/workflows/testes-pr.yml)
+
 # Supermercado API
 
 Este projeto é uma API desenvolvida com **Flask** que simula um sistema de supermercado. A aplicação oferece endpoints REST, interface web com HTML e CSS, e está integrada a um sistema de CI/CD no **Azure DevOps** e no **GitHub Actions**. Conta ainda com testes funcionais e de performance.
