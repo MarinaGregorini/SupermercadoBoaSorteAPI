@@ -1,6 +1,6 @@
 [![Python CI](https://github.com/MarinaGregorini/SupermercadoBoaSorteAPI/actions/workflows/testes-commit.yml/badge.svg?branch=teste&event=push)](https://github.com/MarinaGregorini/SupermercadoBoaSorteAPI/actions/workflows/testes-commit.yml)
 
-[![Docker Build and Load Test](https://github.com/MarinaGregorini/SupermercadoBoaSorteAPI/actions/workflows/testes-pr.yml/badge.svg?branch=main&event=pull_request)](https://github.com/MarinaGregorini/SupermercadoBoaSorteAPI/actions/workflows/testes-pr.yml)
+[![Docker Build and Load Test](https://github.com/MarinaGregorini/SupermercadoBoaSorteAPI/actions/workflows/testes-pr.yml/badge.svg?branch=teste&event=pull_request)](https://github.com/MarinaGregorini/SupermercadoBoaSorteAPI/actions/workflows/testes-pr.yml)
 
 # Supermercado API
 
