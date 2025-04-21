@@ -129,6 +129,9 @@ http://127.0.0.1:5000/
 ├── .azure/
 │   ├── pipeline-commit.yml
 │   └── pipeline-pr.yml
+├── .github/workflows/
+│   ├── testes-commit.yml
+│   └── testes-pr.yml
 ├── Dockerfile
 ├── README.md
 ├── app.py
