@@ -6,9 +6,31 @@ from models import (
     Consumidor,
     consumidor_produto
     )
-from populate_db import popular_db
+from prometheus_client import start_http_server, Summary
+import time
+import threading
+
 
 app = Flask(__name__)
+
+REQUEST_TIME = Summary('flask_request_duration_seconds', 'Duração das requisições por rota', ['path'])
+
+@app.before_request
+def start_timer():
+    request.start_time = time.time()
+    
+@app.after_request
+def record_request_data(response):
+    duration = time.time() - request.start_time
+    path = request.path
+    REQUEST_TIME.labels(path=path).observe(duration)
+    return response
+
+def start_metrics_server():
+    start_http_server(8000)
+    while True:
+        time.sleep(1)
+
 
 base_dir = os.path.abspath(os.path.dirname(__file__))
 db_dir = os.path.join(base_dir, 'db')
@@ -243,4 +265,5 @@ def resumo_compra_api(consumidor_id):
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0')
+    threading.Thread(target=start_metrics_server, daemon=True).start()
+    app.run(host='0.0.0.0', port=5000)
