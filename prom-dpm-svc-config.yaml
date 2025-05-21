@@ -56,15 +56,22 @@ data:
         static_configs:
           - targets: ['localhost:9090']
 
+      - job_name: 'aks-kubelet'
+        scheme: https
+        tls_config:
+          insecure_skip_verify: true
+        authorization:
+          credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        static_configs:
+          - targets: ['aks-agentpool-34936449-vmss000000:10250']
+        metrics_path: '/metrics/cadvisor'
+        relabel_configs:
+          - source_labels: [__address__]
+            target_label: instance
+          - action: labelmap
+            regex: __meta_kubernetes_node_label_(.+)
+
       - job_name: 'py-prom'
+        metrics_path: /metrics
         static_configs:
           - targets: ['py-prom-svc.grupo4.svc.cluster.local:80']
-        metrics_path: '/metrics'
-
-      - job_name: 'kubernetes-pods'
-        kubernetes_sd_configs:
-          - role: pod
-        relabel_configs:
-          - source_labels: [__meta_kubernetes_pod_label_app]
-            action: keep
-            regex: 'py-prom'
