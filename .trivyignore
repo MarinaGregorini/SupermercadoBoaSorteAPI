@@ -1,6 +1,6 @@
 # .trivyignore
 # Ignorar CVE-XXXX-YYYY até ser corrigido
-#CVE-XXXX-YYYY
+# CVE-XXXX-YYYY
 
 # Ignorar vulnerabilidades em bibliotecas específicas
 # python:lib-name:CVE-XXXX-YYYY
