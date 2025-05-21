@@ -28,7 +28,17 @@ jobs:
       - name: Run Lint (flake8)
         run: |
           source .venv/bin/activate
-          find . -type f -name "*.py" ! -path "./.venv/*" ! -path "*/__pycache__/*" | xargs flake8
+          find . -type f -name ".py" ! -path "./.venv/" ! -path "/_pycache_/" | xargs flake8
+
+      - name: Scan Python dependencies for vulnerabilities
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          security-checks: 'vuln,config'
+          skip-dirs: '.venv,_pycache_'
+          format: 'table'
+          exit-code: '1'
 
   test:
     name: Run API Tests
@@ -59,4 +69,4 @@ jobs:
       - name: Run tests
         run: |
           source .venv/bin/activate
-          python3 tests/teste_api.py
+          python3 tests/teste_api.py 

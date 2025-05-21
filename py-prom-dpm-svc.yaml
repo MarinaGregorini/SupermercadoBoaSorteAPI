@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: py-prom-dpm
+  namespace: grupo4
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: py-prom
+  template:
+    metadata:
+      labels:
+        app: py-prom
+    spec:
+      containers:
+        - name: py-prom
+          image: acrgrupo4.azurecr.io/py-prom:latest
+          ports:
+            - containerPort: 5000
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "250m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+      imagePullSecrets:
+        - name: acr-secret
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: py-prom-svc
+  namespace: grupo4
+spec:
+  selector:
+    app: py-prom
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 5000
+  type: LoadBalancer
