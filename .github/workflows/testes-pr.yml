@@ -4,7 +4,7 @@ on:
   pull_request:
     branches:
       - seguranca2
-
+#teste
 jobs:
   trivy-scan:
     name: Run Trivy Security Scan
