@@ -55,6 +55,7 @@ app.wsgi_app = DispatcherMiddleware(app.wsgi_app, {
     '/metrics': make_wsgi_app()
 })
 
+
 @app.before_request
 def before_request():
     REQUESTS_IN_PROGRESS.labels(
