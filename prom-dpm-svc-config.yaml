@@ -62,6 +62,7 @@ data:
           - targets: ['py-prom-svc.grupo4.svc.cluster.local:80']
         metrics_path: '/metrics'
 
+<<<<<<< HEAD
         - job_name: 'node-metrics'
           metrics_path: '/metrics/cadvisor'
           scheme: https
@@ -74,3 +75,12 @@ data:
             - source_labels: [__address__]
               target_label: __metrics_path__
               replacement: /metrics/cadvisor
+=======
+      - job_name: 'kubernetes-pods'
+        kubernetes_sd_configs:
+          - role: pod
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_label_app]
+            action: keep
+            regex: 'py-prom'
+>>>>>>> 049f93812f844275aab96c4b702d597319e1ac47
