@@ -41,7 +41,6 @@ spec:
   type: LoadBalancer
 
 ---
-
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -62,20 +61,6 @@ data:
           - targets: ['py-prom-svc.grupo4.svc.cluster.local:80']
         metrics_path: '/metrics'
 
-<<<<<<< HEAD
-        - job_name: 'node-metrics'
-          metrics_path: '/metrics/cadvisor'
-          scheme: https
-          tls_config:
-            insecure_skip_verify: true
-          static_configs:
-            - targets: ['10.224.0.5:10250']  # IP do node onde seus pods estão
-          bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
-          relabel_configs:
-            - source_labels: [__address__]
-              target_label: __metrics_path__
-              replacement: /metrics/cadvisor
-=======
       - job_name: 'kubernetes-pods'
         kubernetes_sd_configs:
           - role: pod
@@ -83,4 +68,3 @@ data:
           - source_labels: [__meta_kubernetes_pod_label_app]
             action: keep
             regex: 'py-prom'
->>>>>>> 049f93812f844275aab96c4b702d597319e1ac47
