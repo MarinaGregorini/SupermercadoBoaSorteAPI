@@ -3,7 +3,7 @@ name: Docker Build, Security, and Load Test
 on:
   pull_request:
     branches:
-      - seguranca3
+      - seguranca2
 
 jobs:
   zap-security-test:
@@ -55,12 +55,6 @@ jobs:
       - name: Run ZAP alert check
         run: python3 check_zap_alerts.py
 
-      - name: Upload ZAP Report
-        uses: actions/upload-artifact@v2
-        with:
-          name: zap-html-report
-          path: zap-report.html
-
   zap-fullscan:
     name: OWASP ZAP Full Scan (Endpoint Crítico)
     runs-on: ubuntu-latest
@@ -77,12 +71,6 @@ jobs:
             -r zap-fullscan-report.html \
             -J zap-fullscan-output.json \
             -m 5
-
-      - name: Upload Full Scan Report
-        uses: actions/upload-artifact@v2
-        with:
-          name: zap-fullscan-html-report
-          path: zap-fullscan-report.html
 
   locust:
     name: Performance Test
@@ -107,7 +95,7 @@ jobs:
       - name: Start Flask server
         run: |
           source .venv/bin/activate
-          python3 -m flask run --port 8080 &
+          python3 -m flask run --port 5000 &
           sleep 10
 
       - name: Run Locust
