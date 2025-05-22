@@ -9,11 +9,11 @@ jobs:
   trivy-scan:
     name: Run Trivy Security Scan
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-        
+
       - name: Scan Dockerfile for vulnerabilities
         uses: aquasecurity/trivy-action@master
         with:
@@ -21,15 +21,22 @@ jobs:
           scan-ref: 'Dockerfile'
           format: 'table'
           exit-code: '1'
-          
+
       - name: Scan Kubernetes manifests for misconfigurations
         uses: aquasecurity/trivy-action@master
         with:
-          scan-type: 'fs'
-          scan-ref: 'prom-dpm-svc-config.yaml,py-prom-dpm-svc.yaml'
+          scan-type: 'helm'
+          scan-ref: 'helm/'
           security-checks: 'config'
           format: 'table'
           exit-code: '1'
+
+      - name: Scan Helm Chart for vulnerabilities
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'helm'
+          scan-ref: 'helm/'
+          format: 'table'
 
   build-and-run:
     name: Build and Run Application in Docker (Staging)
