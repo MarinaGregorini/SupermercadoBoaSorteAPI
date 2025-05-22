@@ -16,8 +16,8 @@ jobs:
 
       - name: Preparar diretórios e ficheiros ZAP
         run: |
-          mkdir -p zap-output/scripts
-          chmod 777 zap-output scripts
+          mkdir -p zap-output
+          chmod 777 zap-output
 
           # Criar ficheiro zap.yaml
           cat << 'EOF' > zap-output/zap.yaml
