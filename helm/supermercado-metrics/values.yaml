@@ -37,17 +37,19 @@ grafana:
   image:
     repository: grafana/grafana
     tag: latest
-    pullPolicy: IfNotPresent
   service:
     type: LoadBalancer
     port: 3000
-    targetPort: 3000
-  admin:
-    existingSecret: grafana-secret
-  resources:
-    requests:
-      memory: "128Mi"
-      cpu: "250m"
-    limits:
-      memory: "256Mi"
-      cpu: "500m"
+  adminUser: admin
+  adminPassword: admin123       # Mude para algo mais seguro!
+  persistence:
+    enabled: true
+  datasources:
+    datasources.yaml:
+      apiVersion: 1
+      datasources:
+      - name: Prometheus
+        type: prometheus
+        url: http://prom-svc.grupo4.svc.cluster.local:9090
+        access: proxy
+        isDefault: true
