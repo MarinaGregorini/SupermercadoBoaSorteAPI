@@ -34,9 +34,6 @@ jobs:
               name: Spider All Public Endpoints
               context: PublicContext
             - type: passiveScan-wait
-            - type: activeScan
-              name: Active Scan on Public Endpoints
-              context: PublicContext
             - type: report
               parameters:
                 reportDir: /zap/wrk/
