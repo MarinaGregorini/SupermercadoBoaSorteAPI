@@ -29,11 +29,52 @@ jobs:
                   - http://50.85.110.248
                 includePaths:
                   - http://50.85.110.248/api/.*
+                users: []
           jobs:
             - type: spider
               name: Spider All Public Endpoints
               context: PublicContext
+
             - type: passiveScan-wait
+
+            - type: script
+              name: POST Criar Consumidor
+              parameters:
+                script:
+                  type: httpsender
+                  inline: |
+                    function sendingRequest(msg, initiator, helper) {
+                        var uri = msg.getRequestHeader().getURI().toString();
+                        if (uri.endsWith("/api/consumidores/") && msg.getRequestHeader().getMethod() == "POST") {
+                            var body = '{"nome":"usuarioTeste"}';
+                            msg.getRequestBody().setBody(body);
+                            msg.getRequestHeader().setContentLength(body.length);
+                            msg.getRequestHeader().setHeader("Content-Type", "application/json");
+                        }
+                    }
+                    function responseReceived(msg, initiator, helper) {}
+
+            - type: script
+              name: POST Escolher Produtos
+              parameters:
+                script:
+                  type: httpsender
+                  inline: |
+                    function sendingRequest(msg, initiator, helper) {
+                        var uri = msg.getRequestHeader().getURI().toString();
+                        if (uri.endsWith("/api/consumidores/1/produtos/") && msg.getRequestHeader().getMethod() == "POST") {
+                            var body = '{"produtos":[{"produto_id":1,"quantidade":3},{"produto_id":5,"quantidade":2}]}';
+                            msg.getRequestBody().setBody(body);
+                            msg.getRequestHeader().setContentLength(body.length);
+                            msg.getRequestHeader().setHeader("Content-Type", "application/json");
+                        }
+                    }
+                    function responseReceived(msg, initiator, helper) {}
+
+            - type: activeScan
+              name: Active Scan on Public Endpoints
+              context: PublicContext
+
             - type: report
               parameters:
                 reportDir: /zap/wrk/
@@ -53,6 +94,7 @@ jobs:
         run: |
           if grep -q "FAIL" zap-output/zap-report.html; then
             echo "❌ Vulnerabilidades encontradas. Verifica o relatório."
+            exit 1
           else
             echo "✅ Nenhuma vulnerabilidade grave detetada."
           fi
