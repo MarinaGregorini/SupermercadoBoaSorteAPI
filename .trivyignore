@@ -1,16 +1,16 @@
-AVD-KSV-0012
-AVD-KSV-0013
-AVD-KSV-0014
-AVD-KSV-0015
-AVD-KSV-0016
-AVD-KSV-0018
-AVD-KSV-0020
-AVD-KSV-0021
-AVD-KSV-0030
-AVD-KSV-0032
-AVD-KSV-0033
-AVD-KSV-0034
-AVD-KSV-0035
-AVD-KSV-0104
-AVD-KSV-0106
-AVD-KSV-0118
+# supermercado-metrics/templates/flask-app/deployment.yaml
+AVD-KSV-0001  # allowPrivilegeEscalation não definido para py-prom
+AVD-KSV-0003  # capabilities.drop não define ALL para py-prom
+AVD-KSV-0004  # capabilities.drop não está presente para py-prom
+
+# supermercado-metrics/templates/grafana/deployment.yaml
+AVD-KSV-0001  # allowPrivilegeEscalation não definido para grafana
+AVD-KSV-0003  # capabilities.drop não define ALL para grafana
+AVD-KSV-0004  # capabilities.drop não está presente para grafana
+AVD-KSV-0011  # resources.limits.cpu não está definido para grafana
+
+# supermercado-metrics/templates/prometheus/deployment.yaml
+AVD-KSV-0001  # allowPrivilegeEscalation não definido para prometheus
+AVD-KSV-0003  # capabilities.drop não define ALL para prometheus
+AVD-KSV-0004  # capabilities.drop não está presente para prometheus
+AVD-KSV-0011  # resources.limits.cpu não está definido para prometheus
