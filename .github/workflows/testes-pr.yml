@@ -26,8 +26,8 @@ jobs:
             ghcr.io/zaproxy/zaproxy \
             zap-baseline.py \
             -t http://50.85.110.248/ \
-            -r /zap/wrk/zap-report.html \
-            -J /zap/wrk/zap-output.json \
+            -r zap-report.html \
+            -J zap-output.json \
             -d
 
       - name: Create checker script
