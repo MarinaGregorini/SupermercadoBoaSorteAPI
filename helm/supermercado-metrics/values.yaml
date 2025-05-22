@@ -24,10 +24,10 @@ flask:
   resources:
     requests:
       memory: "128Mi"
-      cpu: "250m"
+      cpu: "100m"
     limits:
-      memory: "256Mi"
-      cpu: "500m"
+      memory: "128Mi"
+      cpu: "100m"
 
 rbac:
   create: true
@@ -41,7 +41,7 @@ grafana:
     type: LoadBalancer
     port: 3000
   adminUser: admin
-  adminPassword: admin123       # Mude para algo mais seguro!
+  adminPassword: admin123
   persistence:
     enabled: false
   datasources:
