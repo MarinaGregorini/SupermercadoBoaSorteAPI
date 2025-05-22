@@ -45,3 +45,9 @@ AVD-KSV-0035  # imagem do prometheus não está restrita ao ECR da AWS
 AVD-KSV-0104  # seccomp profile não especificado no prometheus
 AVD-KSV-0106  # container prometheus não está com capabilities DROP ALL
 AVD-KSV-0118  # prometheus usando securityContext padrão
+
+# Ignorar vulnerabilidades conhecidas e não corrigidas na imagem supermercado-api
+
+CVE-2025-4802
+CVE-2023-31484
+CVE-2023-45853
