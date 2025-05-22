@@ -31,3 +31,23 @@ flask:
 
 rbac:
   create: true
+
+grafana:
+  enabled: true
+  image:
+    repository: grafana/grafana
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    type: LoadBalancer
+    port: 3000
+    targetPort: 3000
+  admin:
+    existingSecret: grafana-secret
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "250m"
+    limits:
+      memory: "256Mi"
+      cpu: "500m"
