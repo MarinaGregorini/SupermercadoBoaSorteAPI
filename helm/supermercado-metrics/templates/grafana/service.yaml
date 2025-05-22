@@ -1,20 +1,13 @@
-{{- if .Values.grafana.enabled }}
 apiVersion: v1
 kind: Service
 metadata:
   name: grafana-svc
-  namespace: {{ .Values.namespace }}
-  labels:
-    app: grafana
-    chart: {{ .Chart.Name | quote }}
-    release: {{ .Release.Name | quote }}
+  namespace: { { .Values.namespace } }
 spec:
-  type: {{ .Values.grafana.service.type | quote }}
-  ports:
-    - name: http
-      port: {{ .Values.grafana.service.port }}
-      targetPort: 3000
-      protocol: TCP
   selector:
     app: grafana
-{{- end }}
+  ports:
+    - protocol: TCP
+      port: { { .Values.grafana.service.port } }
+      targetPort: { { .Values.grafana.service.targetPort } }
+  type: { { .Values.grafana.service.type } }
