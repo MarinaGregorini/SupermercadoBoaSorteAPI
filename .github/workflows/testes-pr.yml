@@ -22,21 +22,14 @@ jobs:
           format: 'table'
           exit-code: '1'
 
-      - name: Scan Kubernetes manifests for misconfigurations
+      - name: Scan Helm Chart for config issues and image vulnerabilities
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'helm'
           scan-ref: 'helm/'
-          security-checks: 'config'
+          security-checks: 'vuln,config'
           format: 'table'
           exit-code: '1'
-
-      - name: Scan Helm Chart for vulnerabilities
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: 'helm'
-          scan-ref: 'helm/'
-          format: 'table'
 
   build-and-run:
     name: Build and Run Application in Docker (Staging)
