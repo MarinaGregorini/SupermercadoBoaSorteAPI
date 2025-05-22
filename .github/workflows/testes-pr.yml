@@ -19,7 +19,7 @@ jobs:
           mkdir -p zap-output
           chmod 777 zap-output
 
-      - name: Run OWASP ZAP Baseline Scan
+      - name: Run OWASP ZAP Baseline Scan com spider e active scan
         run: |
           docker run --rm \
             -v $(pwd)/zap-output:/zap/wrk/:rw \
@@ -28,8 +28,9 @@ jobs:
             -t http://50.85.110.248/ \
             -r zap-report.html \
             -J zap-output.json \
-            -d \
-            -I
+            -d \          # debug
+            -S \          # spider scan
+            -a            # active scan
 
       - name: Create checker script
         run: |
@@ -51,66 +52,3 @@ jobs:
 
       - name: Run ZAP alert check
         run: python3 check_zap_alerts.py
-
-  zap-api-daemon-scan:
-    name: OWASP ZAP API Daemon Scan
-    runs-on: ubuntu-latest
-    needs: zap-security-test
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Prepare output directory with permissions
-        run: |
-          mkdir -p zap-output
-          chmod 777 zap-output
-
-      - name: Start ZAP daemon
-        run: |
-          docker run -d --name zap-daemon -p 8080:8080 -v $(pwd)/zap-output:/zap/wrk/ ghcr.io/zaproxy/zaproxy zap.sh -daemon -host 0.0.0.0 -port 8080
-
-      - name: Install Python ZAP API client
-        run: pip install python-owasp-zap-v2.4
-
-      - name: Create ZAP API scan script
-        run: |
-          cat << 'EOF' > zap_api_scan.py
-          import time
-          from zapv2 import ZAPv2
-
-          target = 'http://50.85.110.248/'
-          zap = ZAPv2(apikey='')
-
-          print('Iniciando spider...')
-          scanid = zap.spider.scan(target)
-          while int(zap.spider.status(scanid)) < 100:
-              print(f'Spider progress: {zap.spider.status(scanid)}%')
-              time.sleep(2)
-
-          print('Spider completo. Iniciando Active Scan...')
-          scanid = zap.ascan.scan(target)
-          while int(zap.ascan.status(scanid)) < 100:
-              print(f'Active scan progress: {zap.ascan.status(scanid)}%')
-              time.sleep(5)
-
-          print('Scan completo. Vulnerabilidades encontradas:')
-          alerts = zap.core.alerts()
-          if alerts:
-              for alert in alerts:
-                  print(f"- {alert['alert']} (Risco: {alert['risk']})")
-          else:
-              print("Nenhuma vulnerabilidade encontrada.")
-
-          # Exportar relatório HTML
-          with open('/zap/wrk/zap-report.html', 'w') as f:
-              f.write(zap.core.htmlreport())
-          EOF
-
-      - name: Run ZAP API scan script
-        run: python3 zap_api_scan.py
-
-      - name: Stop ZAP daemon
-        run: |
-          docker stop zap-daemon
-          docker rm zap-daemon
