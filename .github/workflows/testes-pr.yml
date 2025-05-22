@@ -110,4 +110,4 @@ jobs:
       - name: Run Locust
         run: |
           source .venv/bin/activate
-          locust -f tests/locustfile.py --host=http://localhost:5000 --headless -u 10 -r 2 -t15s
+          locust -f tests/locustfile.py --host=http://localhost:5000 --headless -u 10 -r 2 -t 15s
