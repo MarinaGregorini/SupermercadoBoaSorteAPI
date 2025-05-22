@@ -25,9 +25,9 @@ jobs:
       - name: Scan Helm Chart for config issues and image vulnerabilities
         uses: aquasecurity/trivy-action@master
         with:
-          scan-type: 'helm'
+          scan-type: 'fs'
           scan-ref: 'helm/'
-          security-checks: 'vuln,config'
+          scanners: 'vuln,config'
           format: 'table'
           exit-code: '1'
 
