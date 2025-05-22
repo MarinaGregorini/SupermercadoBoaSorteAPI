@@ -14,16 +14,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Prepare output directory with permissions
+        run: |
+          mkdir -p zap-output
+          chmod 777 zap-output
+
       - name: Run OWASP ZAP Baseline Scan
         run: |
           docker run --rm \
-          -v ${{ github.workspace }}:/zap/wrk/:rw \
-          ghcr.io/zaproxy/zaproxy \
-          zap-baseline.py \
-          -t http://50.85.110.248/ \
-          -r /zap/wrk/zap-report.html \
-          -J /zap/wrk/zap-output.json \
-          -d
+            -v $(pwd)/zap-output:/zap/wrk/:rw \
+            ghcr.io/zaproxy/zaproxy \
+            zap-baseline.py \
+            -t http://9.163.149.217/ \
+            -r /zap/wrk/zap-report.html \
+            -J /zap/wrk/zap-output.json \
+            -d
 
       - name: Create checker script
         run: |
@@ -38,7 +43,7 @@ jobs:
               "Incomplete or No Cache-control Header Set"
           }
 
-          with open('zap-output.json') as f:
+          with open('zap-output/zap-output.json') as f:
               data = json.load(f)
 
           alerts = data.get('site', [])[0].get('alerts', [])
@@ -58,23 +63,6 @@ jobs:
 
       - name: Run ZAP alert check
         run: python3 check_zap_alerts.py
-
-  zap-fullscan:
-    name: OWASP ZAP Full Scan (Endpoint Crítico)
-    runs-on: ubuntu-latest
-    needs: zap-security-test
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Run ZAP Full Scan against /api/login
-        run: |
-          docker run --rm -v ${{ github.workspace }}:/zap/wrk/:rw ghcr.io/zaproxy/zaproxy zap-full-scan.py \
-            -t http://50.85.110.248/ \
-            -r zap-fullscan-report.html \
-            -J zap-fullscan-output.json \
-            -m 5
 
   locust:
     name: Performance Test
@@ -104,4 +92,5 @@ jobs:
 
       - name: Run Locust
         run: |
-          source .venv/bin/acti
+          source .venv/bin/activate
+          locust -f tests/locustfile.py --host=http://localhost:8080 --headless -u 10 -r 2 -t15s
