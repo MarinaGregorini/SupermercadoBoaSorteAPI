@@ -30,7 +30,7 @@ jobs:
             -J zap-output.json \
             -d \          # debug
             -S \          # spider scan
-            -a            # active scan
+            -a \          # active scan
             -I            # ignore alerts
 
       - name: Create checker script
