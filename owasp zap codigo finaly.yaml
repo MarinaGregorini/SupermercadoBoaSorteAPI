@@ -1,0 +1,116 @@
+name: Docker Build, Security, and Load Test
+
+on:
+  pull_request:
+    branches:
+      - seguranca3
+
+jobs:
+  zap-security-test:
+    name: OWASP ZAP Baseline Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run OWASP ZAP Baseline Scan
+        run: |
+          docker run --network="host" --rm -v $(pwd):/zap/wrk/:rw owasp/zap2docker-stable zap-baseline.py \
+            -t http://localhost:8080 \
+            -r zap-report.html \
+            -J zap-output.json
+
+      - name: Create checker script
+        run: |
+          cat << 'EOF' > check_zap_alerts.py
+          import json
+          import sys
+
+          ACCEPTABLE_ALERTS = {
+              "Cookie Without Secure Flag",
+              "X-Frame-Options Header Not Set",
+              "X-Content-Type-Options Header Missing",
+              "Incomplete or No Cache-control Header Set"
+          }
+
+          with open('zap-output.json') as f:
+              data = json.load(f)
+
+          alerts = data.get('site', [])[0].get('alerts', [])
+          unacceptable_alerts = [
+              a for a in alerts if a['alert'] not in ACCEPTABLE_ALERTS
+          ]
+
+          if unacceptable_alerts:
+              print("⚠️ Vulnerabilidades não aceitáveis encontradas:")
+              for alert in unacceptable_alerts:
+                  print(f"- {alert['alert']} (Risco: {alert['riskdesc']})")
+              sys.exit(1)
+          else:
+              print("✅ Só vulnerabilidades aceitáveis encontradas. Continuando...")
+              sys.exit(0)
+          EOF
+
+      - name: Run ZAP alert check
+        run: python3 check_zap_alerts.py
+
+      - name: Upload ZAP Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: zap-html-report
+          path: zap-report.html
+
+  zap-fullscan:
+    name: OWASP ZAP Full Scan (Endpoint Crítico)
+    runs-on: ubuntu-latest
+    needs: zap-security-test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run ZAP Full Scan against /api/login
+        run: |
+          docker run --network="host" --rm -v $(pwd):/zap/wrk/:rw owasp/zap2docker-stable zap-full-scan.py \
+            -t http://localhost:8080/api/login \
+            -r zap-fullscan-report.html \
+            -J zap-fullscan-output.json \
+            -m 5
+
+      - name: Upload Full Scan Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: zap-fullscan-html-report
+          path: zap-fullscan-report.html
+
+  locust:
+    name: Performance Test
+    runs-on: ubuntu-latest
+    needs: zap-security-test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          pip install -r requirements.txt
+
+      - name: Start Flask server
+        run: |
+          source .venv/bin/activate
+          python3 -m flask run --port 8080 &
+          sleep 10
+
+      - name: Run Locust
+        run: |
+          source .venv/bin/activate
+          locust -f tests/locustfile.py --host=http://localhost:8080 --headless -u 10 -r 2 -t15s
