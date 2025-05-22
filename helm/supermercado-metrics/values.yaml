@@ -43,7 +43,7 @@ grafana:
   adminUser: admin
   adminPassword: admin123       # Mude para algo mais seguro!
   persistence:
-    enabled: true
+    enabled: false
   datasources:
     datasources.yaml:
       apiVersion: 1
