@@ -1,0 +1,33 @@
+namespace: grupo4
+
+prometheus:
+  image:
+    repository: prom/prometheus
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    type: LoadBalancer
+    port: 9090
+    targetPort: 9090
+  config:
+    scrape_interval: 15s
+
+flask:
+  image:
+    repository: acrgrupo4.azurecr.io/py-prom
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    type: LoadBalancer
+    port: 80
+    targetPort: 5000
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "250m"
+    limits:
+      memory: "256Mi"
+      cpu: "500m"
+
+rbac:
+  create: true
