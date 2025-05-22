@@ -24,10 +24,3 @@ jobs:
     summaryFile: /home/zap/zap_out.json
   rules: []
   type: outputSummary
-- parameters:
-    reportDescription: ''
-    reportDir: /zap/wrk/
-    reportFile: zap-relatorio.html
-    reportTitle: ZAP Scanning Report
-    template: traditional-html
-  type: report

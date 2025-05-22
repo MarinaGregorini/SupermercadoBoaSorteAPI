@@ -16,11 +16,10 @@ jobs:
 
       - name: Run OWASP ZAP Baseline Scan
         run: |
-          docker run -v $(pwd):/zap/wrk/:rw -t ghcr.io/zaproxy/zaproxy zap-baseline.py -t http://9.163.149.217/
-            -t http://localhost:8080 \
+          docker run --rm -v ${{ github.workspace }}:/zap/wrk/:rw ghcr.io/zaproxy/zaproxy zap-baseline.py \
+            -t http://50.85.110.248/ \
             -r zap-report.html \
             -J zap-output.json
-
 
       - name: Create checker script
         run: |
@@ -67,8 +66,8 @@ jobs:
 
       - name: Run ZAP Full Scan against /api/login
         run: |
-          docker run --network="host" --rm -v $(pwd):/zap/wrk/:rw owasp/zap2docker-stable zap-full-scan.py \
-            -t http://localhost:8080/api/login \
+          docker run --rm -v ${{ github.workspace }}:/zap/wrk/:rw ghcr.io/zaproxy/zaproxy zap-full-scan.py \
+            -t http://50.85.110.248/ \
             -r zap-fullscan-report.html \
             -J zap-fullscan-output.json \
             -m 5
@@ -101,5 +100,4 @@ jobs:
 
       - name: Run Locust
         run: |
-          source .venv/bin/activate
-          locust -f tests/locustfile.py --host=http://localhost:8080 --headless -u 10 -r 2 -t15s
+          source .venv/bin/acti
