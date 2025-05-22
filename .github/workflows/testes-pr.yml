@@ -56,7 +56,7 @@ jobs:
         run: python3 check_zap_alerts.py
 
       - name: Upload ZAP Report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v3.1.3
         with:
           name: zap-html-report
           path: zap-report.html
@@ -79,7 +79,7 @@ jobs:
             -m 5
 
       - name: Upload Full Scan Report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v3.1.3
         with:
           name: zap-fullscan-html-report
           path: zap-fullscan-report.html
