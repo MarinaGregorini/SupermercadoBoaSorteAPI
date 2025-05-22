@@ -7,47 +7,55 @@ on:
 
 jobs:
   zap-security-test:
-    name: OWASP ZAP Baseline Scan
+    name: OWASP ZAP Scan - API Pública
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Prepare output directory with permissions
+      - name: Preparar diretório de output
         run: |
           mkdir -p zap-output
           chmod 777 zap-output
 
-      - name: Run OWASP ZAP Baseline Scan
+      - name: Criar ficheiro zap.yaml
+        run: |
+          cat << 'EOF' > zap-output/zap.yaml
+          env:
+            contexts:
+              - name: PublicContext
+                urls:
+                  - http://50.85.110.248
+                includePaths:
+                  - http://50.85.110.248/api/.*
+          jobs:
+            - type: spider
+              name: Spider All Public Endpoints
+              context: PublicContext
+            - type: passiveScan-wait
+            - type: activeScan
+              name: Active Scan on Public Endpoints
+              context: PublicContext
+            - type: report
+              parameters:
+                reportDir: /zap/wrk/
+                reportTitle: "ZAP Scan Report"
+                template: traditional-html
+                reportFile: zap-report.html
+          EOF
+
+      - name: Executar ZAP Automation Framework
         run: |
           docker run --rm \
             -v $(pwd)/zap-output:/zap/wrk/:rw \
             ghcr.io/zaproxy/zaproxy \
-            zap-baseline.py \
-              -t http://50.85.110.248/ \
-              -r zap-report.html \
-              -J zap-output.json \
-              -d \
-              -I
+            zap.sh -cmd -autorun /zap/wrk/zap.yaml
 
-      - name: Create checker script
+      - name: Analisar relatório gerado
         run: |
-          cat << 'EOF' > check_zap_alerts.py
-          import json
-
-          with open('zap-output/zap-output.json') as f:
-              data = json.load(f)
-
-          alerts = data.get('site', [])[0].get('alerts', [])
-
-          if alerts:
-              print("⚠️ Vulnerabilidades encontradas (mas ignoradas devido ao uso do parâmetro -I):")
-              for alert in alerts:
-                  print(f"- {alert['alert']} (Risco: {alert['riskdesc']})")
-          else:
-              print("✅ Nenhuma vulnerabilidade encontrada.")
-          EOF
-
-      - name: Run ZAP alert check
-        run: python3 check_zap_alerts.py
+          if grep -q "FAIL" zap-output/zap-report.html; then
+            echo "❌ Vulnerabilidades encontradas. Verifica o relatório."
+          else
+            echo "✅ Nenhuma vulnerabilidade grave detetada."
+          fi
