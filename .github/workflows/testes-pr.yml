@@ -1,90 +1,93 @@
-name: Docker Build and Load Test
+name: Docker Build, Security, and Load Test
 
 on:
   pull_request:
     branches:
-      - seguranca2
+      - seguranca3
 
 jobs:
-  trivy-scan:
-    name: Run Trivy Security Scan
+  zap-security-test:
+    name: OWASP ZAP Baseline Scan
     runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-        
-      - name: Scan Dockerfile for vulnerabilities
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: 'fs'
-          scan-ref: 'Dockerfile'
-          format: 'table'
-          exit-code: '1'
-          
-      - name: Scan Kubernetes manifests for misconfigurations
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: 'fs'
-          scan-ref: 'prom-dpm-svc-config.yaml,py-prom-dpm-svc.yaml'
-          security-checks: 'config'
-          format: 'table'
-          exit-code: '1'
-
-  build-and-run:
-    name: Build and Run Application in Docker (Staging)
-    runs-on: ubuntu-latest
-    needs: trivy-scan
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Run OWASP ZAP Baseline Scan
+        run: |
+          docker run --network="host" --rm -v $(pwd):/zap/wrk/:rw owasp/zap2docker-stable zap-baseline.py \
+            -t http://localhost:8080 \
+            -r zap-report.html \
+            -J zap-output.json
+
+      - name: Create checker script
+        run: |
+          cat << 'EOF' > check_zap_alerts.py
+          import json
+          import sys
+
+          ACCEPTABLE_ALERTS = {
+              "Cookie Without Secure Flag",
+              "X-Frame-Options Header Not Set",
+              "X-Content-Type-Options Header Missing",
+              "Incomplete or No Cache-control Header Set"
+          }
+
+          with open('zap-output.json') as f:
+              data = json.load(f)
+
+          alerts = data.get('site', [])[0].get('alerts', [])
+          unacceptable_alerts = [
+              a for a in alerts if a['alert'] not in ACCEPTABLE_ALERTS
+          ]
+
+          if unacceptable_alerts:
+              print("⚠️ Vulnerabilidades não aceitáveis encontradas:")
+              for alert in unacceptable_alerts:
+                  print(f"- {alert['alert']} (Risco: {alert['riskdesc']})")
+              sys.exit(1)
+          else:
+              print("✅ Só vulnerabilidades aceitáveis encontradas. Continuando...")
+              sys.exit(0)
+          EOF
+
+      - name: Run ZAP alert check
+        run: python3 check_zap_alerts.py
+
+      - name: Upload ZAP Report
+        uses: actions/upload-artifact@v3
         with:
-          python-version: "3.10"
+          name: zap-html-report
+          path: zap-report.html
 
-      - name: Install dependencies
-        run: |
-          python -m venv .venv
-          source .venv/bin/activate
-          pip install -r requirements.txt
+  zap-fullscan:
+    name: OWASP ZAP Full Scan (Endpoint Crítico)
+    runs-on: ubuntu-latest
+    needs: zap-security-test
 
-      - name: Build Docker image
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run ZAP Full Scan against /api/login
         run: |
-          docker build -t supermercado-api:latest -f Dockerfile .
-          
-      - name: Scan Docker image for vulnerabilities
-        uses: aquasecurity/trivy-action@master
+          docker run --network="host" --rm -v $(pwd):/zap/wrk/:rw owasp/zap2docker-stable zap-full-scan.py \
+            -t http://localhost:8080/api/login \
+            -r zap-fullscan-report.html \
+            -J zap-fullscan-output.json \
+            -m 5
+
+      - name: Upload Full Scan Report
+        uses: actions/upload-artifact@v3
         with:
-          image-ref: 'supermercado-api:latest'
-          format: 'table'
-          exit-code: '1'
-          severity: 'CRITICAL,HIGH'
-
-      - name: Run container and check health
-        run: |
-          docker run -d -p 8080:5000 --name supermercado-test-container supermercado-api:latest
-          echo "Aguardando o container subir..."
-          sleep 10
-
-          echo "Verificando se a aplicação está no ar..."
-          if curl --fail -s http://localhost:8080 > /dev/null; then
-            echo "App respondeu com sucesso!"
-          else
-            echo "App não subiu corretamente"
-            docker logs supermercado-test-container
-            exit 1
-          fi
-
-          docker stop supermercado-test-container
-          docker rm supermercado-test-container
+          name: zap-fullscan-html-report
+          path: zap-fullscan-report.html
 
   locust:
     name: Performance Test
     runs-on: ubuntu-latest
-    needs: build-and-run
+    needs: zap-security-test
 
     steps:
       - name: Checkout code
@@ -104,10 +107,10 @@ jobs:
       - name: Start Flask server
         run: |
           source .venv/bin/activate
-          python3 -m flask run --port 5000 &
+          python3 -m flask run --port 8080 &
           sleep 10
 
       - name: Run Locust
         run: |
           source .venv/bin/activate
-          locust -f tests/locustfile.py --host=http://localhost:5000 --headless -u 10 -r 2 -t15s
+          locust -f tests/locustfile.py --host=http://localhost:8080 --headless -u 10 -r 2 -t15s
