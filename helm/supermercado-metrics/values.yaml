@@ -32,24 +32,3 @@ flask:
 rbac:
   create: true
 
-grafana:
-  enabled: true
-  image:
-    repository: grafana/grafana
-    tag: latest
-  service:
-    type: LoadBalancer
-    port: 3000
-  adminUser: admin
-  adminPassword: admin123
-  persistence:
-    enabled: false
-  datasources:
-    datasources.yaml:
-      apiVersion: 1
-      datasources:
-      - name: Prometheus
-        type: prometheus
-        url: http://prom-svc.grupo4.svc.cluster.local:9090
-        access: proxy
-        isDefault: true
