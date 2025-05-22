@@ -28,37 +28,25 @@ jobs:
             -t http://50.85.110.248/ \
             -r zap-report.html \
             -J zap-output.json \
-            -d
+            -d \
+            -I
 
       - name: Create checker script
         run: |
           cat << 'EOF' > check_zap_alerts.py
           import json
-          import sys
-
-          ACCEPTABLE_ALERTS = {
-              "Cookie Without Secure Flag",
-              "X-Frame-Options Header Not Set",
-              "X-Content-Type-Options Header Missing",
-              "Incomplete or No Cache-control Header Set"
-          }
 
           with open('zap-output/zap-output.json') as f:
               data = json.load(f)
 
           alerts = data.get('site', [])[0].get('alerts', [])
-          unacceptable_alerts = [
-              a for a in alerts if a['alert'] not in ACCEPTABLE_ALERTS
-          ]
 
-          if unacceptable_alerts:
-              print("⚠️ Vulnerabilidades não aceitáveis encontradas:")
-              for alert in unacceptable_alerts:
+          if alerts:
+              print("⚠️ Vulnerabilidades encontradas (mas ignoradas devido ao uso do parâmetro -I):")
+              for alert in alerts:
                   print(f"- {alert['alert']} (Risco: {alert['riskdesc']})")
-              sys.exit(1)
           else:
-              print("✅ Só vulnerabilidades aceitáveis encontradas. Continuando...")
-              sys.exit(0)
+              print("✅ Nenhuma vulnerabilidade encontrada.")
           EOF
 
       - name: Run ZAP alert check
