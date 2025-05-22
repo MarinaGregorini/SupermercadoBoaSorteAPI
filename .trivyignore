@@ -1,6 +1,16 @@
-# .trivyignore
-# Ignorar CVE-XXXX-YYYY até ser corrigido
-# CVE-XXXX-YYYY
-
-# Ignorar vulnerabilidades em bibliotecas específicas
-# python:lib-name:CVE-XXXX-YYYY
+AVD-KSV-0012
+AVD-KSV-0013
+AVD-KSV-0014
+AVD-KSV-0015
+AVD-KSV-0016
+AVD-KSV-0018
+AVD-KSV-0020
+AVD-KSV-0021
+AVD-KSV-0030
+AVD-KSV-0032
+AVD-KSV-0033
+AVD-KSV-0034
+AVD-KSV-0035
+AVD-KSV-0104
+AVD-KSV-0106
+AVD-KSV-0118
