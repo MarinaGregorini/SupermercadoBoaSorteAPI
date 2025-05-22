@@ -9,11 +9,11 @@ jobs:
   trivy-scan:
     name: Run Trivy Security Scan
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-        
+
       - name: Scan Dockerfile for vulnerabilities
         uses: aquasecurity/trivy-action@master
         with:
@@ -21,13 +21,13 @@ jobs:
           scan-ref: 'Dockerfile'
           format: 'table'
           exit-code: '1'
-          
-      - name: Scan Kubernetes manifests for misconfigurations
+
+      - name: Scan Helm Chart for config issues and image vulnerabilities
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'fs'
-          scan-ref: 'prom-dpm-svc-config.yaml,py-prom-dpm-svc.yaml'
-          security-checks: 'config'
+          scan-ref: 'helm/'
+          scanners: 'vuln,config'
           format: 'table'
           exit-code: '1'
 
@@ -110,4 +110,4 @@ jobs:
       - name: Run Locust
         run: |
           source .venv/bin/activate
-          locust -f tests/locustfile.py --host=http://localhost:5000 --headless -u 10 -r 2 -t15s
+          locust -f tests/locustfile.py --host=http://localhost:5000 --headless -u 10 -r 2 -t 15s

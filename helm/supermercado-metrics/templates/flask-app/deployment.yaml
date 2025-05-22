@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: py-prom-dpm
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: py-prom
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: py-prom
+  template:
+    metadata:
+      labels:
+        app: py-prom
+    spec:
+      containers:
+        - name: py-prom
+          image: {{ .Values.flask.image.repository }}:{{ .Values.flask.image.tag }}
+          imagePullPolicy: {{ .Values.flask.image.pullPolicy }}
+          ports:
+            - containerPort: 5000
+          resources:
+            {{- toYaml .Values.flask.resources | nindent 12 }}
+      imagePullSecrets:
+        - name: acr-secret

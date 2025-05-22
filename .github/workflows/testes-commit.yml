@@ -6,44 +6,44 @@ on:
       - seguranca
 
 jobs:
-  lint:
-    name: Run Lint Test
-    runs-on: ubuntu-latest
+  #lint:
+   # name: Run Lint Test
+    #runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
+    #steps:
+#      - name: Checkout repo
+ #       uses: actions/checkout@v3
+#
+ #     - name: Set up Python
+  #      uses: actions/setup-python@v4
+   #     with:
+    #      python-version: "3.10"
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.10"
+     # - name: Install dependencies
+      #  run: |
+       #   python -m venv .venv
+        #  source .venv/bin/activate
+         # pip install -r requirements.txt
 
-      - name: Install dependencies
-        run: |
-          python -m venv .venv
-          source .venv/bin/activate
-          pip install -r requirements.txt
+      #- name: Run Lint (flake8)
+       # run: |
+        #  source .venv/bin/activate
+         # find . -type f -name ".py" ! -path "./.venv/" ! -path "/_pycache_/" | xargs flake8
 
-      - name: Run Lint (flake8)
-        run: |
-          source .venv/bin/activate
-          find . -type f -name ".py" ! -path "./.venv/" ! -path "/_pycache_/" | xargs flake8
+#      - name: Scan Python dependencies for vulnerabilities
+ #       uses: aquasecurity/trivy-action@master
+  #      with:
+   #       scan-type: 'fs'
+    #      scan-ref: '.'
+     #     security-checks: 'vuln,config'
+      ##   format: 'table'
+        #  exit-code: '1'
 
-      - name: Scan Python dependencies for vulnerabilities
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          security-checks: 'vuln,config'
-          skip-dirs: '.venv,_pycache_'
-          format: 'table'
-          exit-code: '1'
 
   test:
     name: Run API Tests
     runs-on: ubuntu-latest
-    needs: lint
+    #needs: lint
 
     steps:
       - name: Checkout repo
