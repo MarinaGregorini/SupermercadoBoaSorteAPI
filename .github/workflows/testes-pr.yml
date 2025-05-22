@@ -3,7 +3,7 @@ name: Docker Build, Security, and Load Test
 on:
   push:
     branches:
-      - seguranca3
+      - seguranca4
 
 jobs:
   zap-security-test:
