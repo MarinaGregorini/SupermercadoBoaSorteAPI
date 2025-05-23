@@ -1,25 +1,15 @@
-name: Docker Build, Security, and Load Test
-
-on:
-  push:
-    branches:
-      - seguranca4
-
 jobs:
   zap-security-test:
-    name: OWASP ZAP Scan - API Pública com Testes POST
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Preparar diretórios e criar scripts ZAP
+      - name: Preparar diretórios e criar scripts
         run: |
           mkdir -p zap-output/scripts
           chmod -R 777 zap-output
 
-          # Script JS para POST /api/consumidores/ (criar consumidor)
           cat << 'EOF' > zap-output/scripts/post_criar_consumidor.js
           function sendingRequest(msg, initiator, helper) {
             if (msg.getRequestHeader().getMethod() === "POST" &&
@@ -32,7 +22,6 @@ jobs:
           }
           EOF
 
-          # Script JS para POST /api/consumidores/1/produtos/
           cat << 'EOF' > zap-output/scripts/post_escolher_produtos.js
           function sendingRequest(msg, initiator, helper) {
             var uri = msg.getRequestHeader().getURI().toString();
@@ -57,25 +46,43 @@ jobs:
                 includePaths:
                   - http://50.85.110.248/api/.*
           jobs:
-            - type: spider
-              name: Spider All Public Endpoints
-              context: PublicContext
+            # Carregar scripts
+            - type: script
+              name: Load Script POST Criar Consumidor
+              parameters:
+                scriptName: post_criar_consumidor.js
+                scriptType: standAlone
+                scriptFile: scripts/post_criar_consumidor.js
+                action: add
 
             - type: script
-              name: POST Criar Consumidor
+              name: Load Script POST Escolher Produtos
               parameters:
-                script: scripts/post_criar_consumidor.js
+                scriptName: post_escolher_produtos.js
+                scriptType: standAlone
+                scriptFile: scripts/post_escolher_produtos.js
+                action: add
+
+            # Executar scripts
+            - type: script
+              name: Run Script POST Criar Consumidor
+              parameters:
+                scriptName: post_criar_consumidor.js
+                scriptType: standAlone
                 action: run
 
             - type: script
-              name: POST Escolher Produtos
+              name: Run Script POST Escolher Produtos
               parameters:
-                script: scripts/post_escolher_produtos.js
+                scriptName: post_escolher_produtos.js
+                scriptType: standAlone
                 action: run
 
+            # Active scan sem context, usa contextName se necessário
             - type: activeScan
               name: Active Scan on Public Endpoints
-              context: PublicContext
+              parameters:
+                contextName: PublicContext
 
             - type: report
               parameters:
