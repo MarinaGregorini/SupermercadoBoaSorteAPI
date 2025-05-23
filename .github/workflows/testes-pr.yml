@@ -106,3 +106,4 @@ jobs:
           else
             echo "✅ Nenhuma vulnerabilidade grave detetada."
           fi
+#
