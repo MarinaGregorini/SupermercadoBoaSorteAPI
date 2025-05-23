@@ -7,7 +7,7 @@ on:
 
 jobs:
   zap-security-test:
-    name: OWASP ZAP Scan - API Pública
+    name: OWASP ZAP Scan - API Pública + Fuzzing Ativo
     runs-on: ubuntu-latest
 
     steps:
@@ -19,7 +19,8 @@ jobs:
           mkdir -p zap-output
           chmod 777 zap-output
 
-      - name: Criar ficheiro zap.yaml
+      # === Passo 1: Criar ficheiro zap.yaml para spider + passive scan + reports (html e json)
+      - name: Criar ficheiro zap.yaml (spider + passive)
         run: |
           cat << 'EOF' > zap-output/zap.yaml
           env:
@@ -47,27 +48,101 @@ jobs:
                 reportFile: zap-report.json
           EOF
 
-      - name: Executar ZAP Automation Framework
+      # === Passo 2: Executar spider + passive scan
+      - name: Executar ZAP spider + passive scan
         run: |
           docker run --rm \
             -v $(pwd)/zap-output:/zap/wrk/:rw \
             ghcr.io/zaproxy/zaproxy \
             zap.sh -cmd -autorun /zap/wrk/zap.yaml
 
-      - name: Analisar vulnerabilidades no relatório JSON
+      # === Passo 3: Criar ficheiro usernames.txt para fuzzing
+      - name: Criar ficheiro usernames.txt para fuzzing
         run: |
-          VULNS=$(jq '[.site[].alerts[]] | length' zap-output/zap-report.json)
-          if [ "$VULNS" -gt 0 ]; then
-            echo "⚠️ Encontradas $VULNS vulnerabilidades:"
+          cat << 'EOF' > zap-output/usernames.txt
+normalUser
+<script>alert(1)</script>
+Robert'); DROP TABLE Users;--
+" OR "" = ""
+💥🤖🌪️
+"admin"
+null
+EOF
+
+      # === Passo 4: Criar ficheiro fuzz.yaml para fuzzing ativo
+      - name: Criar ficheiro fuzz.yaml (fuzzing ativo)
+        run: |
+          cat << 'EOF' > zap-output/fuzz.yaml
+          env:
+            contexts:
+              - name: PublicContext
+                urls:
+                  - http://50.85.110.248
+                includePaths:
+                  - http://50.85.110.248/api/.*
+          jobs:
+            - type: requestor
+              parameters:
+                requests:
+                  - url: http://50.85.110.248/api/login
+                    method: POST
+                    headers:
+                      Content-Type: application/json
+                    data: '{
+                      "username": "§payload§"
+                    }'
+                    attackMode: true
+                    fuzz: true
+                    fuzzers:
+                      - type: file
+                        fileName: /zap/wrk/usernames.txt
+                        payload: payload
+            - type: passiveScan-wait
+            - type: report
+              parameters:
+                reportDir: /zap/wrk/
+                reportFile: zap-fuzz-report.html
+                template: traditional-html
+            - type: report
+              parameters:
+                reportDir: /zap/wrk/
+                reportFile: zap-fuzz-report.json
+                template: traditional-json
+          EOF
+
+      # === Passo 5: Executar fuzzing ativo
+      - name: Executar ZAP fuzzing ativo
+        run: |
+          docker run --rm \
+            -v $(pwd)/zap-output:/zap/wrk/:rw \
+            ghcr.io/zaproxy/zaproxy \
+            zap.sh -cmd -autorun /zap/wrk/fuzz.yaml
+
+      # === Passo 6: Analisar vulnerabilidades dos dois relatórios JSON
+      - name: Analisar vulnerabilidades nos relatórios JSON
+        run: |
+          echo "### Vulnerabilidades no spider + passive scan ###"
+          VULNS1=$(jq '[.site[].alerts[]] | length' zap-output/zap-report.json)
+          if [ "$VULNS1" -gt 0 ]; then
+            echo "⚠️ Encontradas $VULNS1 vulnerabilidades:"
             jq '.site[].alerts[] | {alert: .alert, risk: .riskdesc, url: .instances[].uri}' zap-output/zap-report.json
           else
-            echo "✅ Nenhuma vulnerabilidade detetada."
+            echo "✅ Nenhuma vulnerabilidade detetada no spider + passive scan."
+          fi
+
+          echo "### Vulnerabilidades no fuzzing ativo ###"
+          VULNS2=$(jq '[.site[].alerts[]] | length' zap-output/zap-fuzz-report.json)
+          if [ "$VULNS2" -gt 0 ]; then
+            echo "⚠️ Encontradas $VULNS2 vulnerabilidades:"
+            jq '.site[].alerts[] | {alert: .alert, risk: .riskdesc, url: .instances[].uri}' zap-output/zap-fuzz-report.json
+          else
+            echo "✅ Nenhuma vulnerabilidade detetada no fuzzing ativo."
           fi
         continue-on-error: true
-        
-      - name: Guardar relatório como artefacto
+
+      # === Passo 7: Guardar todos os relatórios como artefactos
+      - name: Guardar relatórios como artefactos
         uses: actions/upload-artifact@v4
         with:
           name: zap-reports
           path: zap-output/
-
