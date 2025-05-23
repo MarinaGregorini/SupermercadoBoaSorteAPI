@@ -14,37 +14,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Preparar diretórios e criar scripts
+      - name: Preparar diretório de output
         run: |
-          mkdir -p zap-output/scripts
-          chmod -R 777 zap-output
+          mkdir -p zap-output
+          chmod 777 zap-output
 
-          cat << 'EOF' > zap-output/scripts/post_criar_consumidor.js
-          function sendingRequest(msg, initiator, helper) {
-            if (msg.getRequestHeader().getMethod() === "POST" &&
-                msg.getRequestHeader().getURI().toString().endsWith("/api/consumidores/")) {
-              var body = '{"username":"testuser","email":"testuser@example.com"}';
-              msg.setRequestBody(body);
-              msg.getRequestHeader().setHeader("Content-Type", "application/json");
-              msg.getRequestHeader().setContentLength(body.length);
-            }
-          }
-          EOF
-
-          cat << 'EOF' > zap-output/scripts/post_escolher_produtos.js
-          function sendingRequest(msg, initiator, helper) {
-            var uri = msg.getRequestHeader().getURI().toString();
-            if (msg.getRequestHeader().getMethod() === "POST" &&
-                uri.endsWith("/api/consumidores/1/produtos/")) {
-              var body = '{"produtos":[1]}';
-              msg.setRequestBody(body);
-              msg.getRequestHeader().setHeader("Content-Type", "application/json");
-              msg.getRequestHeader().setContentLength(body.length);
-            }
-          }
-          EOF
-
-      - name: Criar ficheiro zap.yaml
+      - name: Criar ficheiro zap.yaml com scripts inline
         run: |
           cat << 'EOF' > zap-output/zap.yaml
           env:
@@ -56,34 +31,44 @@ jobs:
                   - http://50.85.110.248/api/.*
           jobs:
             - type: script
-              name: Load Script POST Criar Consumidor
+              name: POST Criar Consumidor
               parameters:
-                scriptName: post_criar_consumidor.js
-                scriptType: standAlone
-                scriptFile: scripts/post_criar_consumidor.js
-                action: add
-
-            - type: script
-              name: Load Script POST Escolher Produtos
-              parameters:
-                scriptName: post_escolher_produtos.js
-                scriptType: standAlone
-                scriptFile: scripts/post_escolher_produtos.js
-                action: add
-
-            - type: script
-              name: Run Script POST Criar Consumidor
-              parameters:
-                scriptName: post_criar_consumidor.js
-                scriptType: standAlone
+                engineName: "Oracle Nashorn"
+                script: |
+                  function sendingRequest(msg, initiator, helper) {
+                    if (msg.getRequestHeader().getMethod() === "POST" &&
+                        msg.getRequestHeader().getURI().toString().endsWith("/api/consumidores/")) {
+                      var body = '{"username":"testuser","email":"testuser@example.com"}';
+                      msg.setRequestBody(body);
+                      msg.getRequestHeader().setHeader("Content-Type", "application/json");
+                      msg.getRequestHeader().setContentLength(body.length);
+                    }
+                  }
+                type: standAlone
                 action: run
 
             - type: script
-              name: Run Script POST Escolher Produtos
+              name: POST Escolher Produtos
               parameters:
-                scriptName: post_escolher_produtos.js
-                scriptType: standAlone
+                engineName: "Oracle Nashorn"
+                script: |
+                  function sendingRequest(msg, initiator, helper) {
+                    var uri = msg.getRequestHeader().getURI().toString();
+                    if (msg.getRequestHeader().getMethod() === "POST" &&
+                        uri.endsWith("/api/consumidores/1/produtos/")) {
+                      var body = '{"produtos":[1]}';
+                      msg.setRequestBody(body);
+                      msg.getRequestHeader().setHeader("Content-Type", "application/json");
+                      msg.getRequestHeader().setContentLength(body.length);
+                    }
+                  }
+                type: standAlone
                 action: run
+
+            - type: activeScan
+              name: Active Scan on Public Endpoints
+              parameters:
+                contextName: PublicContext
 
             - type: report
               parameters:
