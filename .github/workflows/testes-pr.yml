@@ -18,48 +18,15 @@ jobs:
           mkdir -p zap-output
           chmod 777 zap-output
 
-      - name: Criar ficheiro zap.yaml (spider + passive)
-        run: |
-          cat << 'EOF' > zap-output/zap.yaml
-          env:
-            contexts:
-              - name: PublicContext
-                urls:
-                  - http://50.85.110.248
-                includePaths:
-                  - http://50.85.110.248/api/.*
-          jobs:
-            - type: spider
-              name: Spider All Public Endpoints
-              context: PublicContext
-            - type: passiveScan-wait
-            - type: report
-              parameters:
-                reportDir: /zap/wrk/
-                reportTitle: "ZAP Scan Report"
-                template: traditional-html
-                reportFile: zap-report.html
-            - type: report
-              parameters:
-                reportDir: /zap/wrk/
-                template: traditional-json
-                reportFile: zap-report.json
-          EOF
-
-      - name: Executar ZAP spider + passive scan
-        run: |
-          docker run --rm \
-            -v $(pwd)/zap-output:/zap/wrk/:rw \
-            ghcr.io/zaproxy/zaproxy \
-            zap.sh -cmd -autorun /zap/wrk/zap.yaml
-
-      - name: Criar script de fuzzing personalizado
+      - name: Criar script de fuzzing com verificação
         run: |
           cat << 'EOF' > zap-output/fuzz-script.js
           var msg = msg.cloneAll();
-          msg.setRequestHeader('Content-Type: application/json');
+          msg.setRequestHeader('Content-Type: 'application/json');
           
+          // Payloads de teste com marcador verificável
           var payloads = [
+            'FUZZING_VERIFICATION_💥', // Marcador especial
             'normalUser',
             '<script>alert(1)</script>',
             'Robert\'); DROP TABLE Users;--',
@@ -69,77 +36,86 @@ jobs:
             'null'
           ];
           
+          // Log de debug
+          var FileWriter = Java.type('java.io.FileWriter');
+          var fw = new FileWriter('/zap/wrk/fuzz-debug.log', true);
+          
           payloads.forEach(function(payload) {
             var newMsg = msg.cloneAll();
             newMsg.setRequestBody('{"username": "' + payload + '"}');
             newMsg.getRequestHeader().setMethod('POST');
             sendAndReceive(newMsg);
+            fw.write('Payload injetado: ' + payload + '\n');
           });
+          
+          fw.close();
           EOF
 
-      - name: Criar ficheiro fuzz.yaml simplificado
+      - name: Criar configuração ZAP definitiva
         run: |
-          cat << 'EOF' > zap-output/fuzz.yaml
+          cat << 'EOF' > zap-output/zap-config.yaml
           env:
             contexts:
-              - name: PublicContext
+              - name: FuzzContext
                 urls:
                   - http://50.85.110.248
                 includePaths:
                   - http://50.85.110.248/api/.*
           jobs:
             - type: script
-              name: Custom Fuzzing Attack
+              name: Inject Fuzzer
               parameters:
                 action: add
-                type: httpsender
-                engine: graal.js
+                type: "httpsender"
+                engine: "graal.js"
                 file: /zap/wrk/fuzz-script.js
+            - type: spider
+              parameters:
+                context: FuzzContext
+                maxDuration: 5
             - type: activeScan
               parameters:
-                context: PublicContext
-            - type: passiveScan-wait
+                context: FuzzContext
+                scanPolicyName: "Default Policy"
+                threadCount: 2
             - type: report
               parameters:
                 reportDir: /zap/wrk/
-                reportFile: zap-fuzz-report.html
-                template: traditional-html
-            - type: report
-              parameters:
-                reportDir: /zap/wrk/
-                reportFile: zap-fuzz-report.json
-                template: traditional-json
+                reportFile: zap-results.json
+                template: traditional-json-plus
           EOF
 
-      - name: Executar ZAP fuzzing ativo
+      - name: Executar ZAP com verificação
         run: |
           docker run --rm \
             -v $(pwd)/zap-output:/zap/wrk/:rw \
-            ghcr.io/zaproxy/zaproxy \
-            zap.sh -cmd -autorun /zap/wrk/fuzz.yaml
+            ghcr.io/zaproxy/zaproxy:2.14.0 \
+            zap.sh -cmd -autorun /zap/wrk/zap-config.yaml
 
-      - name: Analisar vulnerabilidades nos relatórios JSON
+      - name: Verificar resultados
         run: |
-          echo "### Vulnerabilidades no spider + passive scan ###"
-          VULNS1=$(jq '[.site[].alerts[]] | length' zap-output/zap-report.json)
-          if [ "$VULNS1" -gt 0 ]; then
-            echo "⚠️ Encontradas $VULNS1 vulnerabilidades:"
-            jq '.site[].alerts[] | {alert: .alert, risk: .riskdesc, url: .instances[].uri}' zap-output/zap-report.json
+          echo "=== DEBUG LOG ==="
+          cat zap-output/fuzz-debug.log
+          
+          echo "=== VERIFICAÇÃO ==="
+          if grep -q "FUZZING_VERIFICATION_💥" zap-output/zap-results.json; then
+            echo "✅ FUZZING COMPROVADO - Payload especial encontrado no relatório"
+            echo "📊 Payloads testados: $(grep -c "Payload injetado" zap-output/fuzz-debug.log)"
           else
-            echo "✅ Nenhuma vulnerabilidade detectada no spider + passive scan."
+            echo "❌ FALHA: Fuzzing não registrado"
+            echo "Analisando possíveis causas..."
+            grep "ERROR\|WARN" zap-output/zap.log || echo "Sem erros no log"
+            exit 1
           fi
 
-          echo "### Vulnerabilidades no fuzzing ativo ###"
-          VULNS2=$(jq '[.site[].alerts[]] | length' zap-output/zap-fuzz-report.json)
-          if [ "$VULNS2" -gt 0 ]; then
-            echo "⚠️ Encontradas $VULNS2 vulnerabilidades:"
-            jq '.site[].alerts[] | {alert: .alert, risk: .riskdesc, url: .instances[].uri}' zap-output/zap-fuzz-report.json
-          else
-            echo "✅ Nenhuma vulnerabilidade detectada no fuzzing ativo."
-          fi
-        continue-on-error: true
+          echo "=== RESUMO DE VULNERABILIDADES ==="
+          jq '[.site[].alerts[]? | {risk: .riskdesc, name: .alert, count: .instances | length}] | group_by(.risk)[] | {risk: .[0].risk, vulnerabilities: map({name: .name, count: .count})}' zap-output/zap-results.json
 
       - uses: actions/upload-artifact@v4
         with:
           name: zap-reports
-          path: zap-output/
+          path: |
+            zap-output/zap-results.json
+            zap-output/fuzz-debug.log
+            zap-output/zap.log
+        if: always()
