@@ -64,3 +64,10 @@ jobs:
             echo "✅ Nenhuma vulnerabilidade detetada."
           fi
         continue-on-error: true
+        
+      - name: Guardar relatório como artefacto
+        uses: actions/upload-artifact@v3
+        with:
+          name: zap-reports
+          path: zap-output/
+
