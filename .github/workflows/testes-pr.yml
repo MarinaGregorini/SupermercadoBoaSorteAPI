@@ -1,94 +1,92 @@
-name: Docker Build, Security, and Load Test
+steps:
+  - name: Checkout code
+    uses: actions/checkout@v3
 
-on:
-  push:
-    branches:
-      - seguranca4
+  - name: Preparar diretório zap-output/scripts
+    run: |
+      mkdir -p zap-output/scripts
 
-jobs:
-  zap-security-test:
-    name: OWASP ZAP Scan - API Pública
-    runs-on: ubuntu-latest
+  - name: Criar script POST Criar Consumidor
+    run: |
+      cat << 'EOF' > zap-output/scripts/post_criar_consumidor.js
+      function sendingRequest(msg, initiator, helper) {
+        if (msg.getRequestHeader().getMethod() === "POST" &&
+            msg.getRequestHeader().getURI().toString().endsWith("/api/consumidores/")) {
+          var body = '{"username":"testuser","email":"testuser@example.com"}';
+          msg.setRequestBody(body);
+          msg.getRequestHeader().setHeader("Content-Type", "application/json");
+          msg.getRequestHeader().setContentLength(body.length);
+        }
+      }
+      EOF
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+  - name: Criar script POST Escolher Produtos
+    run: |
+      cat << 'EOF' > zap-output/scripts/post_escolher_produtos.js
+      function sendingRequest(msg, initiator, helper) {
+        var uri = msg.getRequestHeader().getURI().toString();
+        if (msg.getRequestHeader().getMethod() === "POST" &&
+            uri.endsWith("/api/consumidores/1/produtos/")) {
+          var body = '{"produtos":[1]}';
+          msg.setRequestBody(body);
+          msg.getRequestHeader().setHeader("Content-Type", "application/json");
+          msg.getRequestHeader().setContentLength(body.length);
+        }
+      }
+      EOF
 
-      - name: Preparar diretório de output
-        run: |
-          mkdir -p zap-output
-          chmod 777 zap-output
+  - name: Criar ficheiro zap.yaml
+    run: |
+      cat << 'EOF' > zap-output/zap.yaml
+      env:
+        contexts:
+          - name: PublicContext
+            urls:
+              - http://50.85.110.248
+            includePaths:
+              - http://50.85.110.248/api/.*
+      jobs:
+        - type: loadScript
+          scriptName: POST Criar Consumidor
+          scriptType: standAlone
+          file: /zap/wrk/scripts/post_criar_consumidor.js
 
-      - name: Criar ficheiro zap.yaml com scripts inline
-        run: |
-          cat << 'EOF' > zap-output/zap.yaml
-          env:
-            contexts:
-              - name: PublicContext
-                urls:
-                  - http://50.85.110.248
-                includePaths:
-                  - http://50.85.110.248/api/.*
-          jobs:
-            - type: script
-              name: POST Criar Consumidor
-              parameters:
-                engineName: "Oracle Nashorn"
-                script: |
-                  function sendingRequest(msg, initiator, helper) {
-                    if (msg.getRequestHeader().getMethod() === "POST" &&
-                        msg.getRequestHeader().getURI().toString().endsWith("/api/consumidores/")) {
-                      var body = '{"username":"testuser","email":"testuser@example.com"}';
-                      msg.setRequestBody(body);
-                      msg.getRequestHeader().setHeader("Content-Type", "application/json");
-                      msg.getRequestHeader().setContentLength(body.length);
-                    }
-                  }
-                type: standAlone
-                action: run
+        - type: loadScript
+          scriptName: POST Escolher Produtos
+          scriptType: standAlone
+          file: /zap/wrk/scripts/post_escolher_produtos.js
 
-            - type: script
-              name: POST Escolher Produtos
-              parameters:
-                engineName: "Oracle Nashorn"
-                script: |
-                  function sendingRequest(msg, initiator, helper) {
-                    var uri = msg.getRequestHeader().getURI().toString();
-                    if (msg.getRequestHeader().getMethod() === "POST" &&
-                        uri.endsWith("/api/consumidores/1/produtos/")) {
-                      var body = '{"produtos":[1]}';
-                      msg.setRequestBody(body);
-                      msg.getRequestHeader().setHeader("Content-Type", "application/json");
-                      msg.getRequestHeader().setContentLength(body.length);
-                    }
-                  }
-                type: standAlone
-                action: run
+        - type: runScript
+          scriptName: POST Criar Consumidor
+          scriptType: standAlone
 
-            - type: activeScan
-              name: Active Scan on Public Endpoints
-              parameters:
-                contextName: PublicContext
+        - type: runScript
+          scriptName: POST Escolher Produtos
+          scriptType: standAlone
 
-            - type: report
-              parameters:
-                reportDir: /zap/wrk/
-                reportTitle: "ZAP Scan Report"
-                template: traditional-html
-                reportFile: zap-report.html
-          EOF
+        - type: activeScan
+          name: Active Scan on Public Endpoints
+          context: PublicContext
 
-      - name: Executar ZAP Automation Framework
-        run: |
-          docker run --rm \
-            -v $(pwd)/zap-output:/zap/wrk/:rw \
-            ghcr.io/zaproxy/zaproxy \
-            zap.sh -cmd -autorun /zap/wrk/zap.yaml
+        - type: report
+          parameters:
+            reportDir: /zap/wrk/
+            reportTitle: "ZAP Scan Report"
+            template: traditional-html
+            reportFile: zap-report.html
+      EOF
 
-      - name: Analisar relatório gerado
-        run: |
-          if grep -q "FAIL" zap-output/zap-report.html; then
-            echo "❌ Vulnerabilidades encontradas. Verifica o relatório."
-          else
-            echo "✅ Nenhuma vulnerabilidade grave detetada."
-          fi
+  - name: Executar ZAP Automation Framework
+    run: |
+      docker run --rm \
+        -v $(pwd)/zap-output:/zap/wrk/:rw \
+        ghcr.io/zaproxy/zaproxy \
+        zap.sh -cmd -autorun /zap/wrk/zap.yaml
+
+  - name: Analisar relatório gerado
+    run: |
+      if grep -q "FAIL" zap-output/zap-report.html; then
+        echo "❌ Vulnerabilidades encontradas. Verifica o relatório."
+      else
+        echo "✅ Nenhuma vulnerabilidade grave detetada."
+      fi
