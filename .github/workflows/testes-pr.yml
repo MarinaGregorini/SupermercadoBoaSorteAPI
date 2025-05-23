@@ -77,7 +77,7 @@ jobs:
           });
           EOF
 
-      - name: Criar ficheiro fuzz.yaml corrigido
+      - name: Criar ficheiro fuzz.yaml simplificado
         run: |
           cat << 'EOF' > zap-output/fuzz.yaml
           env:
@@ -98,8 +98,6 @@ jobs:
             - type: activeScan
               parameters:
                 context: PublicContext
-                policy: Default Policy
-                scanFullSites: false
             - type: passiveScan-wait
             - type: report
               parameters:
@@ -113,7 +111,7 @@ jobs:
                 template: traditional-json
           EOF
 
-      - name: Executar ZAP fuzzing ativo corrigido
+      - name: Executar ZAP fuzzing ativo
         run: |
           docker run --rm \
             -v $(pwd)/zap-output:/zap/wrk/:rw \
