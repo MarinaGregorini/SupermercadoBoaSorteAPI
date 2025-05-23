@@ -99,7 +99,7 @@ jobs:
               parameters:
                 context: PublicContext
                 policy: Default Policy
-                targetUrl: http://50.85.110.248/api/login
+                scanFullSites: false
             - type: passiveScan-wait
             - type: report
               parameters:
