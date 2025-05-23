@@ -59,7 +59,6 @@ jobs:
           var msg = msg.cloneAll();
           msg.setRequestHeader('Content-Type: application/json');
           
-          // Payloads do seu ficheiro usernames.txt
           var payloads = [
             'normalUser',
             '<script>alert(1)</script>',
@@ -99,7 +98,8 @@ jobs:
             - type: activeScan
               parameters:
                 context: PublicContext
-                target: http://50.85.110.248/api/login
+                policy: Default Policy
+                targetUrl: http://50.85.110.248/api/login
             - type: passiveScan-wait
             - type: report
               parameters:
