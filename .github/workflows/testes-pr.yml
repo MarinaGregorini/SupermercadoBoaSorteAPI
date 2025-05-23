@@ -77,13 +77,6 @@ jobs:
                 scriptName: post_escolher_produtos.js
                 scriptType: standAlone
                 action: run
-
-            # Active scan sem context, usa contextName se necessário
-            - type: activeScan
-              name: Active Scan on Public Endpoints
-              parameters:
-                contextName: PublicContext
-
             - type: report
               parameters:
                 reportDir: /zap/wrk/
