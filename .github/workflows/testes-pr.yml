@@ -53,19 +53,32 @@ jobs:
             ghcr.io/zaproxy/zaproxy \
             zap.sh -cmd -autorun /zap/wrk/zap.yaml
 
-      - name: Criar ficheiro usernames.txt para fuzzing
+      - name: Criar script de fuzzing personalizado
         run: |
-          cat << 'EOF' > zap-output/usernames.txt
-          normalUser
-          <script>alert(1)</script>
-          Robert'); DROP TABLE Users;--
-          " OR "" = ""
-          💥🤖🌪️
-          "admin"
-          null
+          cat << 'EOF' > zap-output/fuzz-script.js
+          var msg = msg.cloneAll();
+          msg.setRequestHeader('Content-Type: application/json');
+          
+          // Payloads do seu ficheiro usernames.txt
+          var payloads = [
+            'normalUser',
+            '<script>alert(1)</script>',
+            'Robert\'); DROP TABLE Users;--',
+            '" OR "" = ""',
+            '💥🤖🌪️',
+            '"admin"',
+            'null'
+          ];
+          
+          payloads.forEach(function(payload) {
+            var newMsg = msg.cloneAll();
+            newMsg.setRequestBody('{"username": "' + payload + '"}');
+            newMsg.getRequestHeader().setMethod('POST');
+            sendAndReceive(newMsg);
+          });
           EOF
 
-      - name: Criar ficheiro fuzz.yaml (fuzzing ativo)
+      - name: Criar ficheiro fuzz.yaml corrigido
         run: |
           cat << 'EOF' > zap-output/fuzz.yaml
           env:
@@ -76,22 +89,17 @@ jobs:
                 includePaths:
                   - http://50.85.110.248/api/.*
           jobs:
-            - type: requestor
+            - type: script
+              name: Custom Fuzzing Attack
               parameters:
-                requests:
-                  - url: http://50.85.110.248/api/login
-                    method: POST
-                    headers:
-                      Content-Type: application/json
-                    data: '{
-                      "username": "§payload§"
-                    }'
-                    attackMode: true
-                    fuzz: true
-                    fuzzers:
-                      - type: file
-                        fileName: /zap/wrk/usernames.txt
-                        payload: payload
+                action: add
+                type: httpsender
+                engine: graal.js
+                file: /zap/wrk/fuzz-script.js
+            - type: activeScan
+              parameters:
+                context: PublicContext
+                target: http://50.85.110.248/api/login
             - type: passiveScan-wait
             - type: report
               parameters:
@@ -105,7 +113,7 @@ jobs:
                 template: traditional-json
           EOF
 
-      - name: Executar ZAP fuzzing ativo
+      - name: Executar ZAP fuzzing ativo corrigido
         run: |
           docker run --rm \
             -v $(pwd)/zap-output:/zap/wrk/:rw \
@@ -120,7 +128,7 @@ jobs:
             echo "⚠️ Encontradas $VULNS1 vulnerabilidades:"
             jq '.site[].alerts[] | {alert: .alert, risk: .riskdesc, url: .instances[].uri}' zap-output/zap-report.json
           else
-            echo "✅ Nenhuma vulnerabilidade detetada no spider + passive scan."
+            echo "✅ Nenhuma vulnerabilidade detectada no spider + passive scan."
           fi
 
           echo "### Vulnerabilidades no fuzzing ativo ###"
@@ -129,7 +137,7 @@ jobs:
             echo "⚠️ Encontradas $VULNS2 vulnerabilidades:"
             jq '.site[].alerts[] | {alert: .alert, risk: .riskdesc, url: .instances[].uri}' zap-output/zap-fuzz-report.json
           else
-            echo "✅ Nenhuma vulnerabilidade detetada no fuzzing ativo."
+            echo "✅ Nenhuma vulnerabilidade detectada no fuzzing ativo."
           fi
         continue-on-error: true
 
