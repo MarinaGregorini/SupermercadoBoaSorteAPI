@@ -1,6 +1,15 @@
+name: Docker Build, Security, and Load Test
+
+on:
+  push:
+    branches:
+      - seguranca4
+
 jobs:
   zap-security-test:
+    name: OWASP ZAP Scan - API Pública
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -46,7 +55,6 @@ jobs:
                 includePaths:
                   - http://50.85.110.248/api/.*
           jobs:
-            # Carregar scripts
             - type: script
               name: Load Script POST Criar Consumidor
               parameters:
@@ -63,7 +71,6 @@ jobs:
                 scriptFile: scripts/post_escolher_produtos.js
                 action: add
 
-            # Executar scripts
             - type: script
               name: Run Script POST Criar Consumidor
               parameters:
@@ -77,6 +84,7 @@ jobs:
                 scriptName: post_escolher_produtos.js
                 scriptType: standAlone
                 action: run
+
             - type: report
               parameters:
                 reportDir: /zap/wrk/
@@ -99,4 +107,3 @@ jobs:
           else
             echo "✅ Nenhuma vulnerabilidade grave detetada."
           fi
-#
