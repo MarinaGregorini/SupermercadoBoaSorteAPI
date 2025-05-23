@@ -40,6 +40,11 @@ jobs:
                 reportTitle: "ZAP Scan Report"
                 template: traditional-html
                 reportFile: zap-report.html
+            - type: report
+              parameters:
+                reportDir: /zap/wrk/
+                template: traditional-json
+                reportFile: zap-report.json
           EOF
 
       - name: Executar ZAP Automation Framework
@@ -49,10 +54,13 @@ jobs:
             ghcr.io/zaproxy/zaproxy \
             zap.sh -cmd -autorun /zap/wrk/zap.yaml
 
-      - name: Analisar relatório gerado
+      - name: Analisar vulnerabilidades no relatório JSON
         run: |
-          if grep -q "FAIL" zap-output/zap-report.html; then
-            echo "❌ Vulnerabilidades encontradas. Verifica o relatório."
+          VULNS=$(jq '[.site[].alerts[]] | length' zap-output/zap-report.json)
+          if [ "$VULNS" -gt 0 ]; then
+            echo "⚠️ Encontradas $VULNS vulnerabilidades:"
+            jq '.site[].alerts[] | {alert: .alert, risk: .riskdesc, url: .instances[].uri}' zap-output/zap-report.json
           else
-            echo "✅ Nenhuma vulnerabilidade grave detetada."
+            echo "✅ Nenhuma vulnerabilidade detetada."
           fi
+        continue-on-error: true
