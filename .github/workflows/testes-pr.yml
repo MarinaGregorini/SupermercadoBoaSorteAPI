@@ -1,4 +1,4 @@
-name: Docker Build, Security and Load Test
+name: Docker Build, Security, and Load Test
 
 on:
   push:
@@ -7,19 +7,47 @@ on:
 
 jobs:
   zap-security-test:
-    name: OWASP ZAP Scan - API Pública
+    name: OWASP ZAP Scan - API Pública com Testes POST
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Preparar diretórios e ficheiros ZAP
+      - name: Preparar diretórios e criar scripts ZAP
         run: |
           mkdir -p zap-output/scripts
-          chmod 777 zap-output
+          chmod -R 777 zap-output
 
-          # Criar ficheiro zap.yaml
+          # Script JS para POST /api/consumidores/ (criar consumidor)
+          cat << 'EOF' > zap-output/scripts/post_criar_consumidor.js
+          function sendingRequest(msg, initiator, helper) {
+            if (msg.getRequestHeader().getMethod() === "POST" &&
+                msg.getRequestHeader().getURI().toString().endsWith("/api/consumidores/")) {
+              var body = '{"username":"testuser","email":"testuser@example.com"}';
+              msg.setRequestBody(body);
+              msg.getRequestHeader().setHeader("Content-Type", "application/json");
+              msg.getRequestHeader().setContentLength(body.length);
+            }
+          }
+          EOF
+
+          # Script JS para POST /api/consumidores/1/produtos/
+          cat << 'EOF' > zap-output/scripts/post_escolher_produtos.js
+          function sendingRequest(msg, initiator, helper) {
+            var uri = msg.getRequestHeader().getURI().toString();
+            if (msg.getRequestHeader().getMethod() === "POST" &&
+                uri.endsWith("/api/consumidores/1/produtos/")) {
+              var body = '{"produtos":[1]}';
+              msg.setRequestBody(body);
+              msg.getRequestHeader().setHeader("Content-Type", "application/json");
+              msg.getRequestHeader().setContentLength(body.length);
+            }
+          }
+          EOF
+
+      - name: Criar ficheiro zap.yaml
+        run: |
           cat << 'EOF' > zap-output/zap.yaml
           env:
             contexts:
@@ -28,84 +56,39 @@ jobs:
                   - http://50.85.110.248
                 includePaths:
                   - http://50.85.110.248/api/.*
-            jobs:
-              - type: spider
-                name: Spider All Public Endpoints
-                context: PublicContext
+          jobs:
+            - type: spider
+              name: Spider All Public Endpoints
+              context: PublicContext
 
-              - type: passiveScan-wait
-
-              - type: script
-                name: Add Script POST Criar Consumidor
-                action: add
-                parameters:
-                  file: /zap/scripts/post_criar_consumidor.js
-                  engine: nashorn
-                  type: httpsender
-
-              - type: script
-                name: Run Script POST Criar Consumidor
+            - type: script
+              name: POST Criar Consumidor
+              parameters:
+                script: scripts/post_criar_consumidor.js
                 action: run
-                parameters:
-                  name: post_criar_consumidor
 
-              - type: script
-                name: Add Script POST Escolher Produtos
-                action: add
-                parameters:
-                  file: /zap/scripts/post_escolher_produtos.js
-                  engine: nashorn
-                  type: httpsender
-
-              - type: script
-                name: Run Script POST Escolher Produtos
+            - type: script
+              name: POST Escolher Produtos
+              parameters:
+                script: scripts/post_escolher_produtos.js
                 action: run
-                parameters:
-                  name: post_escolher_produtos
 
-              - type: report
-                parameters:
-                  reportDir: /zap/wrk/
-                  reportTitle: "ZAP Scan Report"
-                  template: traditional-html
-                  reportFile: zap-report.html
-          EOF
+            - type: activeScan
+              name: Active Scan on Public Endpoints
+              context: PublicContext
 
-          # Criar script post_criar_consumidor.js
-          cat << 'EOF' > zap-output/scripts/post_criar_consumidor.js
-          function sendingRequest(msg, initiator, helper) {
-              var uri = msg.getRequestHeader().getURI().toString();
-              if (uri.endsWith("/api/consumidores/") && msg.getRequestHeader().getMethod() == "POST") {
-                  var body = '{"nome":"usuarioTeste"}';
-                  msg.getRequestBody().setBody(body);
-                  msg.getRequestHeader().setContentLength(body.length);
-                  msg.getRequestHeader().setHeader("Content-Type", "application/json");
-              }
-          }
-
-          function responseReceived(msg, initiator, helper) {}
-          EOF
-
-          # Criar script post_escolher_produtos.js
-          cat << 'EOF' > zap-output/scripts/post_escolher_produtos.js
-          function sendingRequest(msg, initiator, helper) {
-              var uri = msg.getRequestHeader().getURI().toString();
-              if (uri.match(/\/api\/consumidores\/\d+\/produtos\/$/) && msg.getRequestHeader().getMethod() == "POST") {
-                  var body = '{"produtoId":123, "quantidade":1}';
-                  msg.getRequestBody().setBody(body);
-                  msg.getRequestHeader().setContentLength(body.length);
-                  msg.getRequestHeader().setHeader("Content-Type", "application/json");
-              }
-          }
-
-          function responseReceived(msg, initiator, helper) {}
+            - type: report
+              parameters:
+                reportDir: /zap/wrk/
+                reportTitle: "ZAP Scan Report"
+                template: traditional-html
+                reportFile: zap-report.html
           EOF
 
       - name: Executar ZAP Automation Framework
         run: |
           docker run --rm \
             -v $(pwd)/zap-output:/zap/wrk/:rw \
-            -v $(pwd)/zap-output/scripts:/zap/scripts:ro \
             ghcr.io/zaproxy/zaproxy \
             zap.sh -cmd -autorun /zap/wrk/zap.yaml
 
