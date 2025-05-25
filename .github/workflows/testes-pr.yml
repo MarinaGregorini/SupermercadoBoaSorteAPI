@@ -9,11 +9,11 @@ jobs:
   trivy-scan:
     name: Run Trivy Security Scan
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-        
+
       - name: Scan Dockerfile for vulnerabilities
         uses: aquasecurity/trivy-action@master
         with:
@@ -21,13 +21,13 @@ jobs:
           scan-ref: 'Dockerfile'
           format: 'table'
           exit-code: '1'
-          
-      - name: Scan Kubernetes manifests for misconfigurations
+
+      - name: Scan Helm Chart for config issues and image vulnerabilities
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'fs'
-          scan-ref: 'prom-dpm-svc-config.yaml,py-prom-dpm-svc.yaml'
-          security-checks: 'config'
+          scan-ref: 'helm/'
+          scanners: 'vuln,config'
           format: 'table'
           exit-code: '1'
 
@@ -110,4 +110,68 @@ jobs:
       - name: Run Locust
         run: |
           source .venv/bin/activate
-          locust -f tests/locustfile.py --host=http://localhost:5000 --headless -u 10 -r 2 -t15s
+          locust -f tests/locustfile.py --host=http://localhost:5000 --headless -u 10 -r 2 -t 15s
+  zap-security-test:
+    name: OWASP ZAP Scan - API Pública
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Preparar pasta de output
+        run: |
+          mkdir -p zap-output
+          chmod 777 zap-output
+
+      - name: Criar ficheiro zap.yaml
+        run: |
+          cat << 'EOF' > zap-output/zap.yaml
+          env:
+            contexts:
+              - name: PublicContext
+                urls:
+                  - http://50.85.110.248
+                includePaths:
+                  - http://50.85.110.248/api/.*
+          jobs:
+            - type: spider
+              name: Spider All Public Endpoints
+              context: PublicContext
+            - type: passiveScan-wait
+            - type: report
+              parameters:
+                reportDir: /zap/wrk/
+                reportTitle: "ZAP Scan Report"
+                template: traditional-html
+                reportFile: zap-report.html
+            - type: report
+              parameters:
+                reportDir: /zap/wrk/
+                template: traditional-json
+                reportFile: zap-report.json
+          EOF
+
+      - name: Executar ZAP Automation Framework
+        run: |
+          docker run --rm \
+            -v $(pwd)/zap-output:/zap/wrk/:rw \
+            ghcr.io/zaproxy/zaproxy \
+            zap.sh -cmd -autorun /zap/wrk/zap.yaml
+
+      - name: Analisar vulnerabilidades no relatório JSON
+        run: |
+          VULNS=$(jq '[.site[].alerts[]] | length' zap-output/zap-report.json)
+          if [ "$VULNS" -gt 0 ]; then
+            echo "⚠️ Encontradas $VULNS vulnerabilidades:"
+            jq '.site[].alerts[] | {alert: .alert, risk: .riskdesc, url: .instances[].uri}' zap-output/zap-report.json
+          else
+            echo "✅ Nenhuma vulnerabilidade detetada."
+          fi
+        continue-on-error: true
+        
+      - name: Guardar relatório como artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-reports
+          path: zap-output/
