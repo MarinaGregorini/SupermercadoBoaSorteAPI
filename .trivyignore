@@ -1,0 +1,53 @@
+# supermercado-metrics/templates/flask-app/deployment.yaml
+AVD-KSV-0001  # allowPrivilegeEscalation não definido para py-prom
+AVD-KSV-0003  # capabilities.drop não define ALL para py-prom
+AVD-KSV-0004  # capabilities.drop não está presente para py-prom
+AVD-KSV-0012  # runAsNonRoot não definido para py-prom
+
+# supermercado-metrics/templates/grafana/deployment.yaml
+AVD-KSV-0001  # allowPrivilegeEscalation não definido para grafana
+AVD-KSV-0003  # capabilities.drop não define ALL para grafana
+AVD-KSV-0004  # capabilities.drop não está presente para grafana
+AVD-KSV-0011  # resources.limits.cpu não está definido para grafana
+AVD-KSV-0014  # readOnlyRootFilesystem não está definido para grafana (presumido pelo link)
+AVD-KSV-0015  # resources.requests.cpu não está definido para grafana
+AVD-KSV-0016  # resources.requests.memory não está definido para grafana
+AVD-KSV-0018  # resources.limits.memory não está definido para grafana
+AVD-KSV-0020  # runAsUser não está definido para grafana
+AVD-KSV-0021  # runAsGroup não está definido para grafana
+AVD-KSV-0030  # seccompProfile.type não está definido para grafana (RuntimeDefault)
+AVD-KSV-0032  # imagem do grafana não está restrita ao domínio do registry do Azure
+AVD-KSV-0033  # imagem do grafana não está restrita ao domínio do GCR
+AVD-KSV-0034  # imagem do grafana não está restrita a registries privados
+AVD-KSV-0035  # imagem do grafana não está restrita ao ECR da AWS
+AVD-KSV-0104  # seccomp profile não especificado no grafana
+AVD-KSV-0106  # container grafana não está com capabilities DROP ALL
+AVD-KSV-0118  # grafana usando securityContext padrão
+
+# supermercado-metrics/templates/prometheus/deployment.yaml
+AVD-KSV-0001  # allowPrivilegeEscalation não definido para prometheus
+AVD-KSV-0003  # capabilities.drop não define ALL para prometheus
+AVD-KSV-0004  # capabilities.drop não está presente para prometheus
+AVD-KSV-0011  # resources.limits.cpu não está definido para prometheus
+AVD-KSV-0012  # runAsNonRoot não definido para prometheus
+AVD-KSV-0013  # imagem do prometheus usa tag :latest
+AVD-KSV-0014  # readOnlyRootFilesystem não está definido para prometheus
+AVD-KSV-0015  # resources.requests.cpu não está definido para prometheus
+AVD-KSV-0016  # resources.requests.memory não está definido para prometheus
+AVD-KSV-0018  # resources.limits.memory não está definido para prometheus
+AVD-KSV-0020  # runAsUser não está definido para prometheus (deve ser > 10000)
+AVD-KSV-0021  # runAsGroup não está definido para prometheus (deve ser > 10000)
+AVD-KSV-0030  # seccompProfile.type não está definido para prometheus (RuntimeDefault)
+AVD-KSV-0032  # imagem do prometheus não está restrita ao domínio do registry do Azure
+AVD-KSV-0033  # imagem do prometheus não está restrita ao domínio do GCR
+AVD-KSV-0034  # imagem do prometheus não está restrita a registries privados
+AVD-KSV-0035  # imagem do prometheus não está restrita ao ECR da AWS
+AVD-KSV-0104  # seccomp profile não especificado no prometheus
+AVD-KSV-0106  # container prometheus não está com capabilities DROP ALL
+AVD-KSV-0118  # prometheus usando securityContext padrão
+
+# Ignorar vulnerabilidades conhecidas e não corrigidas na imagem supermercado-api
+
+CVE-2025-4802
+CVE-2023-31484
+CVE-2023-45853
