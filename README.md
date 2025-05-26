@@ -1,78 +1,24 @@
-[![Python CI](https://github.com/MarinaGregorini/SupermercadoBoaSorteAPI/actions/workflows/testes-commit.yml/badge.svg?branch=teste&event=push)](https://github.com/MarinaGregorini/SupermercadoBoaSorteAPI/actions/workflows/testes-commit.yml)
+# 🛡️ Supermercado Boa Sorte API – Segurança e Monitorização
 
-[![Docker Build and Load Test](https://github.com/MarinaGregorini/SupermercadoBoaSorteAPI/actions/workflows/testes-pr.yml/badge.svg?branch=teste&event=pull_request)](https://github.com/MarinaGregorini/SupermercadoBoaSorteAPI/actions/workflows/testes-pr.yml)
-
-# Supermercado API
-
-Este projeto é uma API desenvolvida com **Flask** que simula um sistema de supermercado. A aplicação oferece endpoints REST, interface web com HTML e CSS, e está integrada a um sistema de CI/CD no **Azure DevOps** e no **GitHub Actions**. Conta ainda com testes funcionais e de performance.
-
-## Pipelines CI/CD
-
-Este projeto utiliza **duas abordagens de integração contínua**:
-
-### GitHub Actions (CI/CD)
-
-- **Localização:** `.github/workflows/`
-
-#### Workflows definidos
-
-1. **testes.yml**
-   - **Gatilho:** `push` na branch `teste`.
-   - **Etapas:**
-     - Instalação de dependências.
-     - Lint com `flake8`.
-     - Testes funcionais com `python tests/teste_api.py`.
-
-2. **build-and-loadtest.yml**
-   - **Gatilho:** Pull Requests da branch `teste` para `main`.
-   - **Etapas:**
-     - Build da imagem Docker.
-     - Verificação da aplicação via container (`curl`).
-     - Teste de carga com `Locust`.
+Projeto de segurança e monitorização contínua de uma aplicação Python Flask, containerizada com Docker e deployada no Azure Kubernetes Service (AKS). Utiliza ferramentas como **Trivy**, **OWASP ZAP**, **Prometheus** e **GitHub Actions** para garantir a segurança e resiliência da aplicação ao longo do ciclo de vida.
 
 ---
 
-### Azure Pipelines
+## 📦 Requisitos
 
-- **Localização:** `.azure/`
-
-#### pipeline-commit.yml
-
-- **Gatilho:** Commits na branch `teste`.
-
-##### Etapas:
-
-1. **LintTest**  
-   - Verifica a formatação com `flake8`.
-
-2. **TestAPI**  
-   - Inicia o Flask localmente.
-   - Executa `tests/teste_api.py`.
-
-#### pipeline-pr.yml
-
-- **Gatilho:** Pull Requests da branch `teste` para `main`.
-
-##### Etapas:
-
-1. **BuildAndRun**  
-   - Constrói a imagem Docker.  
-   - Executa container e valida com `curl`.
-
-2. **Locust**  
-   - Testes de performance com múltiplos utilizadores.
+- Python 3.10+
+- Docker
+- Azure CLI
+- Kubectl
+- Helm
+- Trivy
+- jq (para leitura do relatório JSON do ZAP)
+- Conta Azure com permissões para ACR/AKS
+- GitHub Actions ativado
 
 ---
 
-## Requisitos
-
-- **Python 3.8+**  
-- **Docker**  
-- **Azure DevOps** (com agente configurado)
-
----
-
-## Como Executar o Projeto
+## 🚀 Instalação e Configuração
 
 ### 1. Clonar o Repositório
 
@@ -81,83 +27,177 @@ git clone https://github.com/MarinaGregorini/SupermercadoBoaSorteAPI.git
 cd SupermercadoBoaSorteAPI
 ```
 
-### 2. Criar um Ambiente Virtual e Instalar Dependências
+### 2. Ambiente Virtual e Dependências
 
 ```bash
-python -m venv venv
-source venv/bin/activate  # No Windows: venv\Scripts\activate
+python3 -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 3. Executar a Aplicação
+### 3. Instalar Azure CLI, Kubectl e Helm
 
 ```bash
-python app.py
+curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+sudo snap install kubectl --classic
+sudo snap install helm --classic
 ```
 
-### 4. Aceder à Web App
-
-Depois de iniciar a aplicação, abra o navegador e aceda a:
+### 4. Autenticar e Conectar ao Cluster AKS
 
 ```bash
-http://127.0.0.1:5000/
+az login
+az aks get-credentials --resource-group RGUPSKILL-SysAdmin --name sysadmin-cluster
+az acr credential show -n acrgrupo4
+```
+
+### 5. Criar Secret no Kubernetes para o ACR
+
+```bash
+kubectl create secret docker-registry acrsecret \
+--docker-server=acrgrupo4.azurecr.io \
+--docker-username=acrgrupo4 \
+--docker-password=<password> -n grupo4
 ```
 
 ---
 
-## Funcionalidades da Aplicação
+## ⚙️ Deploy da Aplicação com Helm
 
-- Identificação do utilizador  
-- Escolha de produtos com sugestões ambientalmente sustentáveis  
-- Cálculo do impacto ambiental dos produtos  
-- Resumo dos produtos seleccionados  
+### 1. Build e Push da Imagem Docker
 
----
+```bash
+docker build -t acrgrupo4.azurecr.io/py-prom:latest .
+docker push acrgrupo4.azurecr.io/py-prom:latest
+```
 
-## Tecnologias Utilizadas
+### 2. Instalar o Helm Chart
 
-- **Python (Flask)**  
-- **HTML, CSS (Bootstrap)**  
-- **SQLite**
+```bash
+helm install supermercado-metrics ./helm/supermercado-metrics -n grupo4
+```
 
----
+### 3. Verificar Recursos no AKS
 
-## Estrutura de Diretórios
-
-```plaintext
-.
-├── .azure/
-│   ├── pipeline-commit.yml
-│   └── pipeline-pr.yml
-├── .github/workflows/
-│   ├── testes-commit.yml
-│   └── testes-pr.yml
-├── Dockerfile
-├── README.md
-├── app.py
-├── db/
-│   └── db_supermercado.db
-├── models.py
-├── populate_db.py
-├── requirements.txt
-├── scriptVM.sh
-├── static/
-│   └── styles.css
-├── templates/
-│   ├── base.html
-│   ├── cadastro.html
-│   ├── escolher_produtos.html
-│   └── resumo_compra.html
-├── tests/
-│   ├── locustfile.py
-│   └── teste_api.py
+```bash
+kubectl get all -n grupo4
 ```
 
 ---
 
-## Equipa
+## 📈 Monitorização com Prometheus
 
-- **Bruna Dutra**  
-- **Marina Gregorini**  
-- **Marta Martins**  
-- **Tiago Silva**
+A aplicação expõe métricas usando `prometheus_client`.  
+Endpoint de métricas: `http://<EXTERNAL-IP>/metrics`
+
+### 🔍 Métricas Incluídas
+
+- `http_requests_total`
+- `http_requests_in_progress`
+
+Exemplo de consulta Prometheus:
+
+```
+http_requests_total{endpoint="/", http_status="200|302"}
+```
+
+---
+
+## 🔐 Segurança com Trivy
+
+### Análise da Imagem Docker
+
+```bash
+trivy image acrgrupo4.azurecr.io/supermercadoboasorteapi:latest
+```
+
+### Filtro por Severidade
+
+```bash
+trivy image --severity HIGH,CRITICAL acrgrupo4.azurecr.io/supermercadoboasorteapi:latest
+```
+
+### Análise do Dockerfile
+
+```bash
+trivy config Dockerfile
+```
+
+### Análise do Helm Chart
+
+```bash
+trivy config helm/
+```
+
+### Análise do Sistema de Ficheiros
+
+```bash
+trivy fs .
+```
+
+---
+
+## 🧪 Testes de Segurança Automatizados (CI/CD)
+
+### 📄 Workflow: Docker Build and Load Test
+
+Arquivo localizado em `.github/workflows/`
+
+#### Etapas do Pipeline:
+
+| Etapa | Descrição |
+|-------|-----------|
+| `trivy-scan` | Verifica vulnerabilidades no Dockerfile e Helm Chart |
+| `build-and-run` | Build da imagem, execução local e verificação de saúde |
+| `locust` | Teste de carga com Locust |
+| `zap-security-test` | Scan de segurança com OWASP ZAP |
+
+### 🔁 Disparo Automático
+
+Esse pipeline é acionado a cada push para a branch `seguranca`.
+
+---
+
+## 🔍 OWASP ZAP – Scan de Segurança
+
+O `zap-security-test` executa um **scan passivo** na API pública (sem autenticação) com geração de relatórios `.html` e `.json`.
+
+#### Exemplo de vulnerabilidades detectadas:
+
+- Injeção SQL
+- Cross-Site Scripting (XSS)
+- Cookies inseguros
+
+---
+
+## 📊 Relatórios
+
+Os relatórios gerados pelo ZAP podem ser acessados nos artefatos do GitHub Actions:
+
+- `zap-report.html` – visual amigável
+- `zap-report.json` – útil para integração automatizada
+
+---
+
+## ✅ Boas Práticas Recomendadas
+
+- Executar scans a cada push para branches críticas
+- Utilizar `.trivyignore` para lidar com falsos positivos
+- Definir limites de recursos nos containers no Kubernetes
+- Utilizar cabeçalhos de segurança como `Content-Security-Policy`
+- Automatizar alertas com Prometheus e ferramentas externas (Slack, SIEM)
+
+---
+
+## 📌 Conclusão
+
+Este projeto demonstra a integração eficaz de práticas DevSecOps com ferramentas modernas de segurança e monitorização. Com o uso de **Trivy**, **OWASP ZAP** e **Prometheus**, é possível detectar e mitigar vulnerabilidades desde o desenvolvimento até a produção.
+ 
+ ---
+
+## 👨‍💻 Autores
+
+- Bruna Dutra  
+- Marina Gregorini  
+- Marta Martins  
+- Tiago Silva
