@@ -107,6 +107,7 @@ def cadastro():
         consumidor = Consumidor(nome=nome)  # Criando consumidor
         db.session.add(consumidor)
         db.session.commit()  # Salvando no banco
+        print("Cliente salvo na db.")
 
         return redirect(url_for(
             'escolher_produtos',
