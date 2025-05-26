@@ -12,25 +12,6 @@ from werkzeug.middleware.dispatcher import DispatcherMiddleware
 
 app = Flask(__name__)
 
-REQUEST_TIME = Summary('flask_request_duration_seconds', 'Duração das requisições por rota', ['path'])
-
-@app.before_request
-def start_timer():
-    request.start_time = time.time()
-    
-@app.after_request
-def record_request_data(response):
-    duration = time.time() - request.start_time
-    path = request.path
-    REQUEST_TIME.labels(path=path).observe(duration)
-    return response
-
-def start_metrics_server():
-    start_http_server(8000)
-    while True:
-        time.sleep(1)
-
-
 base_dir = os.path.abspath(os.path.dirname(__file__))
 db_dir = os.path.join(base_dir, 'db')
 if not os.path.exists(db_dir):
@@ -107,7 +88,6 @@ def cadastro():
         consumidor = Consumidor(nome=nome)  # Criando consumidor
         db.session.add(consumidor)
         db.session.commit()  # Salvando no banco
-        print("Cliente salvo na db.")
 
         return redirect(url_for(
             'escolher_produtos',
