@@ -88,6 +88,7 @@ class Produto(db.Model):
          self.produtor.distancia_km *
          self.transportadora.co2_km
         )
+        print("teste")
         if self.transportadora.eletrica:
             return 0
         elif poluicao_transporte < 52000:
