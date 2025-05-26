@@ -3,7 +3,7 @@ name: Docker Build and Load Test
 on:
   push:
     branches:
-      - seguranca
+      - main
 
 jobs:
   trivy-scan:

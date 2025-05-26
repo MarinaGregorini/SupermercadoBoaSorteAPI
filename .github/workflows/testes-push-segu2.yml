@@ -3,7 +3,7 @@ name: Python CI
 on:
   push:
     branches:
-      - seguranca2
+      - main
 
 jobs:
   #lint:
