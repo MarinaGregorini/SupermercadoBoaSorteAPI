@@ -6,10 +6,9 @@ from models import (
     Consumidor,
     consumidor_produto
     )
-from prometheus_client import start_http_server, Summary
-import time
-import threading
-
+from populate_db import popular_db
+from prometheus_client import Counter, Gauge, make_wsgi_app
+from werkzeug.middleware.dispatcher import DispatcherMiddleware
 
 app = Flask(__name__)
 
@@ -57,6 +56,48 @@ with app.app_context():
 
     if db_vazia():
         popular_db()
+
+
+HTTP_REQUESTS_TOTAL = Counter(
+    'http_requests_total',
+    'Total de requisições HTTP',
+    ['method', 'endpoint', 'http_status']
+)
+
+REQUESTS_IN_PROGRESS = Gauge(
+    'http_requests_in_progress',
+    'Número de requisições sendo processadas',
+    ['method', 'endpoint']
+)
+
+app.wsgi_app = DispatcherMiddleware(app.wsgi_app, {
+    '/metrics': make_wsgi_app()
+})
+
+
+@app.before_request
+def before_request():
+    REQUESTS_IN_PROGRESS.labels(
+        method=request.method,
+        endpoint=request.path
+    ).inc()
+
+
+@app.after_request
+def after_request(response):
+    # Atualiza métricas após cada request
+    HTTP_REQUESTS_TOTAL.labels(
+        method=request.method,
+        endpoint=request.path,
+        http_status=response.status_code
+    ).inc()
+
+    REQUESTS_IN_PROGRESS.labels(
+        method=request.method,
+        endpoint=request.path
+    ).dec()
+
+    return response
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -265,5 +306,4 @@ def resumo_compra_api(consumidor_id):
 
 
 if __name__ == '__main__':
-    threading.Thread(target=start_metrics_server, daemon=True).start()
     app.run(host='0.0.0.0', port=5000)
